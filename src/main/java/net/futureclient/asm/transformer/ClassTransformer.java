@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class ClassTransformer {
+public abstract class ClassTransformer implements Comparable<ClassTransformer> {
 
     private List<FieldTransformer> fieldTransformers = new ArrayList<>();
     private List<MethodTransformer> methodTransformers = new ArrayList<>();
@@ -63,5 +63,10 @@ public abstract class ClassTransformer {
 
     public int getPriority() {
         return priority;
+    }
+
+    @Override
+    public int compareTo(ClassTransformer ct) {
+        return Integer.compare(getPriority(), ct.getPriority());
     }
 }
