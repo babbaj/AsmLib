@@ -18,7 +18,7 @@ public abstract class FieldTransformer {
         return this.fieldName;
     }
 
-    public ClassTransformer getClassTransformer() {
+    public final ClassTransformer getClassTransformer() {
         return this.classTransformer;
     }
 }

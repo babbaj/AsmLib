@@ -18,7 +18,7 @@ public abstract class MethodTransformer {
         return this.methodName;
     }
 
-    public ClassTransformer getClassTransformer() {
+    public final ClassTransformer getClassTransformer() {
         return this.classTransformer;
     }
 }
