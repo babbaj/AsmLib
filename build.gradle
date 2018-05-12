@@ -1,0 +1,25 @@
+group 'net.futureclient'
+version '0.1-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = targetCompatibility = '1.8'
+compileJava {
+    sourceCompatibility = targetCompatibility = '1.8'
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'mojang'
+        url 'https://libraries.minecraft.net/'
+    }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    compile group: 'net.minecraft', name: 'launchwrapper', version: '1.12'
+
+    compile group: 'com.google.guava', name: 'guava', version: '22.0'
+}
