@@ -22,6 +22,8 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
+        LOGGER.log(Level.INFO, transformedName);
+
         List<ClassTransformer> classTransformers = this.getTransformers(transformedName);
 
         if (!classTransformers.isEmpty()) {
@@ -51,10 +53,11 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
     }
 
     private List<ClassTransformer> getTransformers(String name) {
-        return AsmLib.getInstance().getConfigManager()
+        return AsmLib.getConfigManager()
                 .getConfigs().stream()
                 .map(Config::getClassTransformers)
                 .flatMap(List::stream)
+                .filter(classTransformer -> classTransformer.getClassName().equals(name))
                 .sorted(ClassTransformer::compareTo)
                 .collect(Collectors.toList());
     }

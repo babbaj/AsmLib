@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class Config implements Comparable<Config> {
+public class Config implements Comparable<Config> {
 
     private final List<ClassTransformer> classTransformers = new ArrayList<>();
 
@@ -22,24 +22,24 @@ public abstract class Config implements Comparable<Config> {
         this(name, 1000);
     }
 
-    protected void addClassTransformers(ClassTransformer... classTransformers) {
+    protected final void addClassTransformers(ClassTransformer... classTransformers) {
         this.classTransformers.addAll(Arrays.asList(classTransformers));
     }
 
-    public List<ClassTransformer> getClassTransformers() {
-        return classTransformers;
+    public final List<ClassTransformer> getClassTransformers() {
+        return this.classTransformers;
     }
 
-    public String getName() {
-        return name;
+    public final String getName() {
+        return this.name;
     }
 
-    public int getPriority() {
-        return priority;
+    public final int getPriority() {
+        return this.priority;
     }
 
     @Override
-    public int compareTo(Config cf) {
+    public final int compareTo(Config cf) {
         if (cf == null) return -1;
 
         return Integer.compare(this.getPriority(), cf.getPriority());
