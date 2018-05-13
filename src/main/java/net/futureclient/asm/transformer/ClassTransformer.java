@@ -1,13 +1,10 @@
 package net.futureclient.asm.transformer;
 
-import net.futureclient.asm.AsmLib;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 public abstract class ClassTransformer implements Comparable<ClassTransformer> {
 
@@ -22,32 +19,6 @@ public abstract class ClassTransformer implements Comparable<ClassTransformer> {
         this.className = className;
         this.required = required;
         this.priority = priority;
-        this.addDeclaredTransformers();
-    }
-
-    private void addDeclaredTransformers() {
-        Stream.of(getClass().getDeclaredClasses())
-                .filter(this::isValidTransformerClass)
-                .map(clazz -> {
-                    try {
-                        return clazz.newInstance();
-                    } catch (Exception e) {
-                        AsmLib.LOGGER.error(e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .forEach(instance -> {
-                    if (instance instanceof MethodTransformer)
-                        methodTransformers.add((MethodTransformer)instance);
-                    if (instance instanceof FieldTransformer)
-                        fieldTransformers.add((FieldTransformer)instance);
-                });
-    }
-    private boolean isValidTransformerClass(Class<?> clazz) {
-        return clazz.isAnnotationPresent(RegisterTransformer.class) &&
-                (MethodTransformer.class.isInstance(clazz) || FieldTransformer.class.isInstance(clazz)) &&
-                clazz.getDeclaredMethods()[0].getParameterCount() == 0;
     }
 
     public ClassTransformer(final String className, final boolean required) {
@@ -58,22 +29,34 @@ public abstract class ClassTransformer implements Comparable<ClassTransformer> {
         this(className, false, 1000);
     }
 
-    protected void inject(ClassNode classNode) {/* override to transform ClassNode*/}
+    public ClassTransformer(final Class<?> klazz, final boolean required, final int priority) {
+        this(klazz.getName(), required, priority);
+    }
 
-    //TODO: handle in the LaunchWrapperTransformer
+    public ClassTransformer(final Class<?> klazz, final boolean required) {
+        this(klazz.getName(), required);
+    }
+
+    public ClassTransformer(final Class<?> klazz) {
+        this(klazz.getName());
+    }
+
+    public void inject(ClassNode classNode) {}
+
     public final void transform(ClassNode classNode) {
-        this.inject(classNode);
-        this.fieldTransformers.forEach(fieldTransformer ->
+        getFieldTransformers().forEach(fieldTransformer ->
                 classNode.fields.stream()
                         .filter(fieldNode -> fieldNode.name.equals(fieldTransformer.getFieldName()))
                         .findFirst()
                         .ifPresent(fieldTransformer::inject));
 
-        this.methodTransformers.forEach(methodTransformer ->
+        getMethodTransformers().forEach(methodTransformer ->
                 classNode.methods.stream()
                         .filter(methodNode -> methodNode.name.equals(methodTransformer.getMethodName()))
                         .findFirst()
                         .ifPresent(methodTransformer::inject));
+
+        this.inject(classNode);
     }
 
     protected void addFieldTransformers(FieldTransformer... fieldTransformers) {
