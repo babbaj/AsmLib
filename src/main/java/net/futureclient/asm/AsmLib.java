@@ -12,6 +12,9 @@ public final class AsmLib {
 
     private static ConfigManager configManager = new ConfigManager();
 
+    static {
+        LOGGER.info("AsmLib loaded by: " + LaunchWrapperTransformer.class.getClassLoader().getClass().getName());
+    }
 
     private AsmLib() {}
 

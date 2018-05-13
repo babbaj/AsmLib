@@ -16,7 +16,7 @@ public final class MainTransformer extends ClassTransformer {
             public void inject(MethodNode methodNode) {
                 InsnList insnList = new InsnList();
 
-                insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "me/hugenerd/load/transformer/MessageCheatingTransformer", "onMain", "()V", false));
+                insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "me/hugenerd/load/transformer/MainTransformer", "onMain", "()V", false));
 
                 methodNode.instructions.insert(insnList);
             }

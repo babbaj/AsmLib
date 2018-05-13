@@ -1,7 +1,5 @@
-package me.hugenerd.load;
+package me.hugenerd.tweaker;
 
-import me.hugenerd.load.config.MemeConfig;
-import net.futureclient.asm.AsmLib;
 import net.futureclient.asm.transformer.wrapper.LaunchWrapperTransformer;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -9,6 +7,7 @@ import net.minecraft.launchwrapper.LaunchClassLoader;
 import java.io.File;
 import java.util.List;
 
+// this class MUST be in a separate package
 public final class MemeTweaker implements ITweaker {
 
     @Override
@@ -16,8 +15,7 @@ public final class MemeTweaker implements ITweaker {
 
     @Override
     public void injectIntoClassLoader(LaunchClassLoader classLoader) {
-        //AsmLib.getConfigManager().addConfiguration(new MemeConfig());
-
+        // TODO: proper initialization
         classLoader.registerTransformer(LaunchWrapperTransformer.class.getName());
     }
 

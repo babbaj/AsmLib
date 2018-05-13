@@ -21,8 +21,8 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
 
     public LaunchWrapperTransformer() {}
 
+    // init
     static {
-        LOGGER.info("LaunchWrapperTransformer loaded by: " + LaunchWrapperTransformer.class.getClassLoader().getClass().getName());
         AsmLib.getConfigManager().addConfiguration(new MemeConfig());
     }
 
@@ -66,7 +66,6 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
                 .flatMap(List::stream)
                 .filter(classTransformer -> classTransformer.getClassName().equals(name))
                 .sorted(ClassTransformer::compareTo)
-                .peek(ct -> System.out.println("Transformer: " + ct.getClassName()))
                 .collect(Collectors.toList());
     }
 
