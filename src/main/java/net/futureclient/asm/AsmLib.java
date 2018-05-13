@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 public final class AsmLib {
 
-    private static final Logger LOGGER = LogManager.getLogger("asmlib");
+    public static final Logger LOGGER = LogManager.getLogger("asmlib");
     private static final String VERSION = "0.1";
 
     private static AsmLib instance = new AsmLib();

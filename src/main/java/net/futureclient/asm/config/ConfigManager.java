@@ -1,6 +1,8 @@
 package net.futureclient.asm.config;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,9 +16,11 @@ public class ConfigManager {
         this.configs.add(config);
     }
 
-    public List<Config> getConfigs() {
-        return this.configs.stream()
+    // TODO: don't return new list
+    public Collection<Config> getConfigs() {
+        return Collections.unmodifiableCollection(
+                this.configs.stream()
                 .sorted(Config::compareTo)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
     }
 }

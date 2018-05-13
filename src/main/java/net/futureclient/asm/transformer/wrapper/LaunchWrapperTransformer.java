@@ -1,5 +1,7 @@
 package net.futureclient.asm.transformer.wrapper;
 
+import net.futureclient.asm.AsmLib;
+import net.futureclient.asm.config.Config;
 import net.futureclient.asm.transformer.ClassTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.apache.logging.log4j.Level;
@@ -10,6 +12,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class LaunchWrapperTransformer implements IClassTransformer {
 
@@ -26,7 +29,6 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
             ClassReader cr = new ClassReader(basicClass);
             cr.accept(cn, 0);
 
-
             classTransformers.forEach(transformer -> {
                 try {
                     transformer.transform(cn);
@@ -34,7 +36,7 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
                     LOGGER.log(Level.ERROR, "Error transforming \"{}\" with transformer \"{}\".", transformedName, transformer.getClass().getName());
 
                     if (transformer.isRequired())
-                        throw throwable;
+                        throw throwable; // crash game
                     else
                         throwable.printStackTrace();
                 }
@@ -49,6 +51,12 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
     }
 
     private List<ClassTransformer> getTransformers(String name) {
-        return null;
+        return AsmLib.getInstance().getConfigManager()
+                .getConfigs().stream()
+                .map(Config::getClassTransformers)
+                .flatMap(List::stream)
+                .sorted(ClassTransformer::compareTo)
+                .collect(Collectors.toList());
     }
+
 }
