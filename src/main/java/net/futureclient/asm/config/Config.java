@@ -40,8 +40,7 @@ public abstract class Config implements Comparable<Config> {
 
     @Override
     public int compareTo(Config cf) {
-        if (cf == null)
-            return 0;
+        if (cf == null) return -1;
 
         return Integer.compare(this.getPriority(), cf.getPriority());
     }
