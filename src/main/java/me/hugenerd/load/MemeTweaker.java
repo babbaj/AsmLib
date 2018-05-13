@@ -16,7 +16,7 @@ public final class MemeTweaker implements ITweaker {
 
     @Override
     public void injectIntoClassLoader(LaunchClassLoader classLoader) {
-        AsmLib.getConfigManager().addConfiguration(new MemeConfig());
+        //AsmLib.getConfigManager().addConfiguration(new MemeConfig());
 
         classLoader.registerTransformer(LaunchWrapperTransformer.class.getName());
     }

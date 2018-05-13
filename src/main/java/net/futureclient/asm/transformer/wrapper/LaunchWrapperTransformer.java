@@ -1,5 +1,6 @@
 package net.futureclient.asm.transformer.wrapper;
 
+import me.hugenerd.load.config.MemeConfig;
 import net.futureclient.asm.AsmLib;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.transformer.ClassTransformer;
@@ -16,13 +17,19 @@ import java.util.stream.Collectors;
 
 public final class LaunchWrapperTransformer implements IClassTransformer {
 
-    private final Logger LOGGER = LogManager.getLogger("asmlib");
+    private static final Logger LOGGER = LogManager.getLogger("asmlib");
 
     public LaunchWrapperTransformer() {}
 
+    static {
+        LOGGER.info("LaunchWrapperTransformer loaded by: " + LaunchWrapperTransformer.class.getClassLoader().getClass().getName());
+        AsmLib.getConfigManager().addConfiguration(new MemeConfig());
+    }
+
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        LOGGER.log(Level.INFO, transformedName);
+        LOGGER.log(Level.INFO, "TransformedName: " + transformedName);
+        if (transformedName.startsWith("net.futureclient")) return basicClass;
 
         List<ClassTransformer> classTransformers = this.getTransformers(transformedName);
 
@@ -59,6 +66,7 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
                 .flatMap(List::stream)
                 .filter(classTransformer -> classTransformer.getClassName().equals(name))
                 .sorted(ClassTransformer::compareTo)
+                .peek(ct -> System.out.println("Transformer: " + ct.getClassName()))
                 .collect(Collectors.toList());
     }
 
