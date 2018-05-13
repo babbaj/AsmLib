@@ -29,16 +29,16 @@ public abstract class ClassTransformer implements Comparable<ClassTransformer> {
         this(className, false, 1000);
     }
 
-    public ClassTransformer(final Class<?> klazz, final boolean required, final int priority) {
-        this(klazz.getName(), required, priority);
+    public ClassTransformer(final Class<?> clazz, final boolean required, final int priority) {
+        this(clazz.getName(), required, priority);
     }
 
-    public ClassTransformer(final Class<?> klazz, final boolean required) {
-        this(klazz.getName(), required);
+    public ClassTransformer(final Class<?> clazz, final boolean required) {
+        this(clazz.getName(), required);
     }
 
-    public ClassTransformer(final Class<?> klazz) {
-        this(klazz.getName());
+    public ClassTransformer(final Class<?> clazz) {
+        this(clazz.getName());
     }
 
     public void inject(ClassNode classNode) {}
