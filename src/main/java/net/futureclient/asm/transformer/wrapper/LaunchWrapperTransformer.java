@@ -29,7 +29,6 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
         LOGGER.log(Level.INFO, "TransformedName: " + transformedName);
-        if (transformedName.startsWith("net.futureclient")) return basicClass;
 
         List<ClassTransformer> classTransformers = this.getTransformers(transformedName);
 
@@ -41,6 +40,7 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
             classTransformers.forEach(transformer -> {
                 try {
                     transformer.transform(cn);
+                    LOGGER.info("Successfully transformed class {}", transformer.getClassName()); // TODO; success message for each method
                 } catch (Throwable throwable) {
                     LOGGER.log(Level.ERROR, "Error transforming \"{}\" with transformer \"{}\".", transformedName, transformer.getClass().getName());
 

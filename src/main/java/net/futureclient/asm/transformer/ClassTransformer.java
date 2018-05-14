@@ -41,7 +41,7 @@ public abstract class ClassTransformer implements Comparable<ClassTransformer> {
         this(clazz.getName());
     }
 
-    public void inject(ClassNode classNode) {}
+    protected void inject(ClassNode classNode) {}
 
     public final void transform(ClassNode classNode) {
         getFieldTransformers().forEach(fieldTransformer ->
@@ -52,7 +52,10 @@ public abstract class ClassTransformer implements Comparable<ClassTransformer> {
 
         getMethodTransformers().forEach(methodTransformer ->
                 classNode.methods.stream()
-                        .filter(methodNode -> methodNode.name.equals(methodTransformer.getMethodName()))
+                        .filter(methodNode ->
+                            methodNode.name.equals(methodTransformer.getMethodName()) &&
+                            methodNode.desc.equals(methodTransformer.getMethodDesc())
+                        )
                         .findFirst()
                         .ifPresent(methodTransformer::inject));
 

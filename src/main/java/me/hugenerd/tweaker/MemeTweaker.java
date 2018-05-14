@@ -16,6 +16,7 @@ public final class MemeTweaker implements ITweaker {
     @Override
     public void injectIntoClassLoader(LaunchClassLoader classLoader) {
         // TODO: proper initialization
+        classLoader.addTransformerExclusion("net.futureclient.");
         classLoader.registerTransformer(LaunchWrapperTransformer.class.getName());
     }
 

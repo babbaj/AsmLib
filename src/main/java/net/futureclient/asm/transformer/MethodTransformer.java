@@ -5,10 +5,12 @@ import org.objectweb.asm.tree.MethodNode;
 public abstract class MethodTransformer {
 
     private final String methodName;
+    private final String methodDesc; // TODO: auto generate
     private final ClassTransformer classTransformer;
 
-    public MethodTransformer(final String methodName, final ClassTransformer classTransformer) {
+    public MethodTransformer(final String methodName, final String methodDescriptor,final ClassTransformer classTransformer) {
         this.methodName = methodName;
+        this.methodDesc = methodDescriptor;
         this.classTransformer = classTransformer;
     }
 
@@ -16,6 +18,10 @@ public abstract class MethodTransformer {
 
     public String getMethodName() {
         return this.methodName;
+    }
+
+    public String getMethodDesc() {
+        return this.methodDesc;
     }
 
     public final ClassTransformer getClassTransformer() {
