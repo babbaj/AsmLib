@@ -92,8 +92,6 @@ public abstract class ClassTransformer implements Comparable<ClassTransformer> {
 
     @Override
     public int compareTo(ClassTransformer ct) {
-        if (ct == null) return -1;
-
         return Integer.compare(getPriority(), ct.getPriority());
     }
 }

@@ -6,12 +6,10 @@ public abstract class MethodTransformer {
 
     private final String methodName;
     private final String methodDesc; // TODO: auto generate
-    private final ClassTransformer classTransformer;
 
-    public MethodTransformer(final String methodName, final String methodDescriptor,final ClassTransformer classTransformer) {
+    public MethodTransformer(final String methodName, final String methodDescriptor) {
         this.methodName = methodName;
         this.methodDesc = methodDescriptor;
-        this.classTransformer = classTransformer;
     }
 
     public abstract void inject(MethodNode methodNode);
@@ -24,7 +22,4 @@ public abstract class MethodTransformer {
         return this.methodDesc;
     }
 
-    public final ClassTransformer getClassTransformer() {
-        return this.classTransformer;
-    }
 }

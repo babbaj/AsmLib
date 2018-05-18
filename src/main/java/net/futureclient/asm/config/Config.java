@@ -1,10 +1,14 @@
 package net.futureclient.asm.config;
 
 import net.futureclient.asm.transformer.ClassTransformer;
+import net.futureclient.asm.transformer.gen.TransformerGenerator;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 public class Config implements Comparable<Config> {
 
@@ -26,6 +30,13 @@ public class Config implements Comparable<Config> {
         this.classTransformers.addAll(Arrays.asList(classTransformers));
     }
 
+    protected final void addClassTransformers(Class<?>... classes) {
+        Stream.of(classes)
+                .map(TransformerGenerator::fromClass)
+                .filter(Objects::nonNull)
+                .forEach(classTransformers::add);
+    }
+
     public final List<ClassTransformer> getClassTransformers() {
         return this.classTransformers;
     }
@@ -39,9 +50,7 @@ public class Config implements Comparable<Config> {
     }
 
     @Override
-    public final int compareTo(Config cf) {
-        if (cf == null) return -1;
-
+    public final int compareTo(@Nonnull Config cf) {
         return Integer.compare(this.getPriority(), cf.getPriority());
     }
 }

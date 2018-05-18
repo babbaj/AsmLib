@@ -11,7 +11,7 @@ public final class MainTransformer extends ClassTransformer {
 
     public MainTransformer() {
         super("me.hugenerd.Main");
-        this.addMethodTransformers(new MethodTransformer("main", "([Ljava/lang/String;)V", this) {
+        this.addMethodTransformers(new MethodTransformer("main", "([Ljava/lang/String;)V") {
             @Override
             public void inject(MethodNode methodNode) {
                 InsnList insnList = new InsnList();
