@@ -1,4 +1,4 @@
-package net.futureclient.asm.transformer.gen;
+package net.futureclient.asm.transformer.util;
 
 import net.futureclient.asm.transformer.ClassTransformer;
 import net.futureclient.asm.transformer.MethodTransformer;
@@ -29,17 +29,18 @@ public final class TransformerGenerator {
             Inject.class
     );
 
+    //@Deprecated
     public static ClassTransformer fromClass(Class<?> clazz) {
         if (!clazz.isAnnotationPresent(Transformer.class))
             throw new IllegalArgumentException("Missing @Transformer annotation");
-        if (!hasValidConstructor(clazz)) throw new IllegalArgumentException("Invalid constructor, expected 0 args");
+        if (!hasValidConstructor(clazz))
+            throw new IllegalArgumentException("Invalid constructor, expected 0 args");
 
         Transformer info = clazz.getAnnotation(Transformer.class);
         try {
             Object instance = clazz.newInstance();
             ClassTransformer transformer = new MemeClassTransformer(instance, info.target());
             Stream.of(clazz.getDeclaredMethods())
-                    .filter(m -> m.getDeclaredAnnotations().length > 0)
                     .filter(m -> !isConstructor(m))
                     .filter(m -> isValidTransformer(m))
                     .map(m -> createMethodTransformer(m, instance))
@@ -54,19 +55,20 @@ public final class TransformerGenerator {
 
     // create a method transformer that encapsulates a java.lang.reflect.Method
     // TODO: support more annotations
-    public static MethodTransformer createMethodTransformer(Method m, Object instance) {
-        Inject info = m.getAnnotation(Inject.class);
+    @Deprecated
+    public static MethodTransformer createMethodTransformer(Method method, Object instance) {
+        Inject info = method.getAnnotation(Inject.class);
         final String[] parsed = parseTarget(info.target());
         String name = parsed[0];
         String desc = parsed[1];
 
-        final Class<?>[] params = m.getParameterTypes(); // TODO: stuff
+        final Class<?>[] params = method.getParameterTypes(); // TODO: stuff
 
         return new MethodTransformer(name, desc) { // maybe don't use anonymous class?
             @Override
             public void inject(MethodNode methodNode) {
                 try {
-                    m.invoke(instance, methodNode);
+                    method.invoke(instance, methodNode);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

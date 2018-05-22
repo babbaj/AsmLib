@@ -1,4 +1,4 @@
-package net.futureclient.asm.transformer.gen;
+package net.futureclient.asm.transformer.util;
 
 import net.futureclient.asm.transformer.ClassTransformer;
 

@@ -21,14 +21,10 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
 
     public LaunchWrapperTransformer() {}
 
-    // init
-    static {
-        AsmLib.getConfigManager().addConfiguration(new MemeConfig());
-    }
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        LOGGER.log(Level.INFO, "TransformedName: " + transformedName);
+        LOGGER.log(Level.INFO, "LaunchWrapperTransformer: " + transformedName);
 
         List<ClassTransformer> classTransformers = this.getTransformers(transformedName);
 

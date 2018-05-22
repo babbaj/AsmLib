@@ -1,5 +1,7 @@
 package me.hugenerd.tweaker;
 
+import net.futureclient.asm.AsmLib;
+import net.futureclient.asm.internal.transformer.TransformerPreProcessor;
 import net.futureclient.asm.transformer.wrapper.LaunchWrapperTransformer;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -16,8 +18,24 @@ public final class MemeTweaker implements ITweaker {
     @Override
     public void injectIntoClassLoader(LaunchClassLoader classLoader) {
         // TODO: proper initialization
-        classLoader.addTransformerExclusion("net.futureclient.");
+        //classLoader.addTransformerExclusion("net.futureclient.");
+
+        Class<?> asmLibClass = null;
+        try {
+            asmLibClass = Class.forName("net.futureclient.asm.AsmLib", true, classLoader);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        classLoader.registerTransformer(TransformerPreProcessor.class.getName()); // TODO: move to AsmLib initialization
         classLoader.registerTransformer(LaunchWrapperTransformer.class.getName());
+
+        try {
+            asmLibClass.getDeclaredMethod("initTransformerPatches").invoke(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

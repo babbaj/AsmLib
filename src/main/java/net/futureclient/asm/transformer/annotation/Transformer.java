@@ -8,8 +8,10 @@ import java.lang.annotation.Target;
 /**
  * Created by Babbaj on 5/17/2018.
  */
+// TODO: allow target to be a class
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
+//@Retention(RetentionPolicy.CLASS)
 public @interface Transformer {
     String target();
 }

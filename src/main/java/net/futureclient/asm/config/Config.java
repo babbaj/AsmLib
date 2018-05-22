@@ -1,17 +1,15 @@
 package net.futureclient.asm.config;
 
 import net.futureclient.asm.transformer.ClassTransformer;
-import net.futureclient.asm.transformer.gen.TransformerGenerator;
+import net.futureclient.asm.transformer.util.TransformerGenerator;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class Config implements Comparable<Config> {
 
+    private final Set<String> transformerClasses = new HashSet<>();
     private final List<ClassTransformer> classTransformers = new ArrayList<>();
 
     private final String name;
@@ -26,15 +24,27 @@ public class Config implements Comparable<Config> {
         this(name, 1000);
     }
 
+    //@Deprecated
     protected final void addClassTransformers(ClassTransformer... classTransformers) {
         this.classTransformers.addAll(Arrays.asList(classTransformers));
     }
 
-    protected final void addClassTransformers(Class<?>... classes) {
+    @Deprecated
+    private void addClassTransformers(Class<?>... classes) {
         Stream.of(classes)
                 .map(TransformerGenerator::fromClass)
                 .filter(Objects::nonNull)
                 .forEach(classTransformers::add);
+    }
+
+    // Getting the class name by calling Class::getName will cause the class to be loaded early
+    protected final void addClassTransformer(String className) {
+        // transformer processor needs to know about these classes before they are loaded
+        transformerClasses.add(className); // TODO: directly give class name to transformer
+    }
+
+    public final Set<String> getTransformerClasses() {
+        return this.transformerClasses;
     }
 
     public final List<ClassTransformer> getClassTransformers() {
