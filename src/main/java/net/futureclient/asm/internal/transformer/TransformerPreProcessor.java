@@ -1,18 +1,12 @@
 package net.futureclient.asm.internal.transformer;
 
 import jdk.internal.org.objectweb.asm.Type;
-import me.hugenerd.load.config.MemeConfig;
 import net.futureclient.asm.AsmLib;
-import net.futureclient.asm.config.Config;
 import net.futureclient.asm.transformer.annotation.Transformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
-
-import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Stream;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -60,10 +54,8 @@ public class TransformerPreProcessor implements IClassTransformer {
     }
 
     private boolean configContainsClass(String className) {
-        return Stream.of(AsmLib.getConfigManager().getConfigs())
-                .flatMap(Collection::stream)
-                .map(Config::getTransformerClasses)
-                .flatMap(Set::stream)
+        return AsmLib.getConfigManager()
+                .getClassTransformers().stream()
                 .anyMatch(className::equals);
     }
 }

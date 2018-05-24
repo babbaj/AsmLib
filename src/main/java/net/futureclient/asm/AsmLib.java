@@ -29,15 +29,17 @@ public final class AsmLib {
 
     // to be called via reflection
     public static void initTransformerPatches() {
-        getConfigManager().getConfigs().stream()
-                .map(Config::getTransformerClasses)
-                .flatMap(Set::stream)
+        getConfigManager().getClassTransformers().stream()
                 .map(AsmLib::loadClass)
                 .filter(Objects::nonNull)
                 .map(TransformerGenerator::fromClass)
                 .filter(Objects::nonNull)
                 .forEach(transformer -> {
-                    getConfigManager().getConfigs().iterator().next().getClassTransformers().add(transformer); // TODO: do this properly
+                    getConfigManager().getTransformerCache()
+                            .getOrDefault(transformer.getClass().getName(), getConfigManager().getDefaultConfig()) // use default if mapped to nothing
+                            .getClassTransformers().add(transformer);
+
+                    getConfigManager().getTransformerCache().remove(transformer.getClassName());
                 });
     }
 

@@ -1,5 +1,6 @@
 package net.futureclient.asm.config;
 
+import net.futureclient.asm.AsmLib;
 import net.futureclient.asm.transformer.ClassTransformer;
 import net.futureclient.asm.transformer.util.TransformerGenerator;
 
@@ -9,7 +10,7 @@ import java.util.stream.Stream;
 
 public class Config implements Comparable<Config> {
 
-    private final Set<String> transformerClasses = new HashSet<>();
+    //private final Set<String> transformerClasses = new HashSet<>();
     private final List<ClassTransformer> classTransformers = new ArrayList<>();
 
     private final String name;
@@ -40,12 +41,13 @@ public class Config implements Comparable<Config> {
     // Getting the class name by calling Class::getName will cause the class to be loaded early
     protected final void addClassTransformer(String className) {
         // transformer processor needs to know about these classes before they are loaded
-        transformerClasses.add(className); // TODO: directly give class name to transformer
+        // TODO: maybe give class name directly to transformer
+        AsmLib.getConfigManager().addTransformer(className, this);
     }
 
-    public final Set<String> getTransformerClasses() {
+    /*public final Set<String> getTransformerClasses() {
         return this.transformerClasses;
-    }
+    }*/
 
     public final List<ClassTransformer> getClassTransformers() {
         return this.classTransformers;
