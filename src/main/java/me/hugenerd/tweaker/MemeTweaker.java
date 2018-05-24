@@ -25,7 +25,7 @@ public final class MemeTweaker implements ITweaker {
             asmLibClass = Class.forName("net.futureclient.asm.AsmLib", true, classLoader);
         } catch (Exception e) {
             e.printStackTrace();
-            System.exit(1);
+            return;
         }
 
         classLoader.registerTransformer(TransformerPreProcessor.class.getName()); // TODO: move to AsmLib initialization
