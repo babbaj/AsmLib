@@ -9,7 +9,6 @@ public final class MemeConfig extends Config {
 
     public MemeConfig() {
         super("meme-mod");
-        ClassTransformer.class.getDeclaredMethods(); // need this to load class for some reason
         //this.addClassTransformers(new MainTransformer());
         //this.addClassTransformers(TestTransformer.class);
         this.addClassTransformer("me.hugenerd.load.transformer.LambdaTestTransformer");

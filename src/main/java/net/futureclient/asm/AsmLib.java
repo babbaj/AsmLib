@@ -3,6 +3,7 @@ package net.futureclient.asm;
 import me.hugenerd.load.config.MemeConfig;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.config.ConfigManager;
+import net.futureclient.asm.transformer.ClassTransformer;
 import net.futureclient.asm.transformer.util.TransformerGenerator;
 import net.futureclient.asm.transformer.wrapper.LaunchWrapperTransformer;
 import net.minecraft.launchwrapper.Launch;
@@ -20,6 +21,7 @@ public final class AsmLib {
 
     private static ConfigManager configManager = new ConfigManager();
 
+    // pre initialization
     static {
         LOGGER.info("AsmLib v{}", VERSION);
         AsmLib.getConfigManager().addConfiguration(new MemeConfig());
