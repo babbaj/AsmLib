@@ -25,6 +25,7 @@ public final class AsmLib {
         AsmLib.getConfigManager().addConfiguration(new MemeConfig());
     }
 
+    // to be called via reflection
     public static void initTransformerPatches() {
         getConfigManager().getConfigs().stream()
                 .map(Config::getTransformerClasses)

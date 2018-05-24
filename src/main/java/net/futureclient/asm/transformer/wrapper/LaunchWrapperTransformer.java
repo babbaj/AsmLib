@@ -24,7 +24,7 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        LOGGER.log(Level.INFO, "LaunchWrapperTransformer: " + transformedName);
+        //LOGGER.log(Level.INFO, "LaunchWrapperTransformer: " + transformedName);
 
         List<ClassTransformer> classTransformers = this.getTransformers(transformedName);
 

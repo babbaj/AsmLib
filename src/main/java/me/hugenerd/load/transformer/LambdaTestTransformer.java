@@ -17,15 +17,15 @@ public class LambdaTestTransformer {
 
     @Inject(target = "main([Ljava/lang/String;)V")
     public void inject(MethodNode node) {
-        node.instructions.insert(new MethodInsnNode(INVOKESTATIC, Type.getInternalName(getClass()), "onMain", "()V", false));
-        //test(() -> System.out.println("cool lambda"));
+        //node.instructions.insert(new MethodInsnNode(INVOKESTATIC, Type.getInternalName(getClass()), "onMain", "()V", false));
+        node.instructions.insert(new MethodInsnNode(INVOKESTATIC, Type.getInternalName(getClass()), "lambda$inject$0", "()V", false));
+
+        test(() -> System.out.println("cool lambda"));
     }
 
     public static void onMain() {
         System.out.println("Hello from LambdaTestTransformer!");
     }
 
-    private void test(Runnable r) {
-
-    }
+    private void test(Runnable r) {}
 }

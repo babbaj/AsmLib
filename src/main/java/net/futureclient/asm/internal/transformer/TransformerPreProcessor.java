@@ -1,5 +1,6 @@
 package net.futureclient.asm.internal.transformer;
 
+import jdk.internal.org.objectweb.asm.Type;
 import me.hugenerd.load.config.MemeConfig;
 import net.futureclient.asm.AsmLib;
 import net.futureclient.asm.config.Config;
@@ -13,19 +14,19 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static org.objectweb.asm.Opcodes.*;
+
+
 /**
  * Created by Babbaj on 5/20/2018.
- *
+ * <p>
  * This class is responsible for processing the bytecode of transformers
- *
  */
 public class TransformerPreProcessor implements IClassTransformer {
 
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        System.out.println("TransformerPreProcessor: " + transformedName);
-
         if (configContainsClass(transformedName)) {
             ClassNode cn = new ClassNode();
             ClassReader cr = new ClassReader(basicClass);
@@ -33,7 +34,7 @@ public class TransformerPreProcessor implements IClassTransformer {
 
             // TODO: read annotation
             if (cn.visibleAnnotations.stream()
-                    .noneMatch(node -> node.desc.equals(Transformer.class.getSimpleName()))) {
+                    .noneMatch(node -> node.desc.equals('L' + Type.getInternalName(Transformer.class) + ';'))) {
                 AsmLib.LOGGER.error("Transformer Class {} is missing @{} annotation", transformedName, Transformer.class.getSimpleName());
                 return basicClass;
             }
@@ -50,6 +51,12 @@ public class TransformerPreProcessor implements IClassTransformer {
 
     private void processClass(ClassNode clazz) {
         // TODO: process @Transformer annotation and lambdas
+        clazz.methods.stream()
+                .filter(method -> (method.access & ACC_SYNTHETIC) != 0)
+                .forEach(method -> {
+                    method.access &= ~ACC_PRIVATE;
+                    method.access |= ACC_PUBLIC;
+                });
     }
 
     private boolean configContainsClass(String className) {
@@ -57,7 +64,6 @@ public class TransformerPreProcessor implements IClassTransformer {
                 .flatMap(Collection::stream)
                 .map(Config::getTransformerClasses)
                 .flatMap(Set::stream)
-                //.peek(clazz -> System.out.println(":DDD " + clazz + " " + className))
                 .anyMatch(className::equals);
     }
 }
