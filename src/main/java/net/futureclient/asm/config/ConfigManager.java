@@ -12,6 +12,7 @@ public class ConfigManager {
     private final List<Config> configs = Lists.newArrayList(default_config);
 
     // used to remember what config a transformer belongs to
+    // TODO: maybe put somewhere else
     private final Map<String, Config> transformerCache = new HashMap<>();
 
     public ConfigManager() {}

@@ -13,7 +13,7 @@ import static org.objectweb.asm.Opcodes.*;
 /**
  * Created by Babbaj on 5/17/2018.
  */
-@Transformer(target = "me.hugenerd.Main")
+@Transformer(targets = {"me.hugenerd.Main"})
 public class TestTransformer {
 
     @Inject(target = "main([Ljava/lang/String;)V")

@@ -5,11 +5,11 @@ import net.futureclient.asm.transformer.ClassTransformer;
 /**
  * Created by Babbaj on 5/17/2018.
  */
-public class MemeClassTransformer extends ClassTransformer {
+public class ReflectiveClassTransformer extends ClassTransformer {
 
-    private Object instance;
+    private Object instance; // unused
 
-    public MemeClassTransformer(Object instanceIn, String name) {
+    public ReflectiveClassTransformer(Object instanceIn, String name) {
         super(name);
         this.instance = instanceIn;
     }

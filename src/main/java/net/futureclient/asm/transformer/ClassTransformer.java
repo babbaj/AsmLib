@@ -8,9 +8,10 @@ import java.util.List;
 
 public abstract class ClassTransformer implements Comparable<ClassTransformer> {
 
-    private List<MethodTransformer> methodTransformers = new ArrayList<>();
-    private List<FieldTransformer> fieldTransformers = new ArrayList<>();
+    private final List<MethodTransformer> methodTransformers = new ArrayList<>();
+    private final List<FieldTransformer> fieldTransformers = new ArrayList<>();
 
+    // TODO: support multiple target classes
     private final String className;
     private final boolean required;
     private final int priority;
@@ -29,17 +30,6 @@ public abstract class ClassTransformer implements Comparable<ClassTransformer> {
         this(className, false, 1000);
     }
 
-    public ClassTransformer(final Class<?> clazz, final boolean required, final int priority) {
-        this(clazz.getName(), required, priority);
-    }
-
-    public ClassTransformer(final Class<?> clazz, final boolean required) {
-        this(clazz.getName(), required);
-    }
-
-    public ClassTransformer(final Class<?> clazz) {
-        this(clazz.getName());
-    }
 
     protected void inject(ClassNode classNode) {}
 

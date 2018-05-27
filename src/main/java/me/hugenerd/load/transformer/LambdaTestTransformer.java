@@ -1,5 +1,6 @@
 package me.hugenerd.load.transformer;
 
+import me.hugenerd.Main;
 import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.annotation.Transformer;
 import org.objectweb.asm.Type;
@@ -11,9 +12,8 @@ import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 /**
  * Created by Babbaj on 5/21/2018.
  */
-@Transformer(target = "me.hugenerd.Main")
+@Transformer(Main.class)
 public class LambdaTestTransformer {
-
 
     @Inject(target = "main([Ljava/lang/String;)V")
     public void inject(MethodNode node) {
@@ -21,10 +21,6 @@ public class LambdaTestTransformer {
         node.instructions.insert(new MethodInsnNode(INVOKESTATIC, Type.getInternalName(getClass()), "lambda$inject$0", "()V", false));
 
         test(() -> System.out.println("cool lambda"));
-    }
-
-    public static void onMain() {
-        System.out.println("Hello from LambdaTestTransformer!");
     }
 
     private void test(Runnable r) {}
