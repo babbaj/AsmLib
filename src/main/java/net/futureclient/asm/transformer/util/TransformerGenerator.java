@@ -34,11 +34,12 @@ public final class TransformerGenerator {
 
     //@Deprecated
     public static ClassTransformer fromClass(Class<?> clazz) {
-        //Transformer info = clazz.getAnnotation(Transformer.class);
+        checkClass(clazz);
+
         AnnotationInfo info = AsmLib.transformerAnnotations.get(clazz.getName());
         try {
             Object instance = clazz.newInstance();
-            String targetClass = info.<List<Type>>getValue("value").get(0).getClassName();
+            String targetClass = info.<List<Type>>getValue("value").get(0).getClassName(); // TODO: check both targets and value
             ClassTransformer transformer = new ClassTransformer(targetClass) {};//new ReflectiveClassTransformer(instance, info.targets()[0]);
             Stream.of(clazz.getDeclaredMethods())
                     .filter(m -> !isConstructor(m))

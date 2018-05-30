@@ -19,7 +19,6 @@ public class AnnotationInfo {
     private final Class<? extends Annotation> annotationClazz;
     private final ImmutableMap<String, ?> valueMap;
 
-
     public static AnnotationInfo fromAsm(ClassNode node, Class<? extends Annotation> clazz) {
         return Stream.concat(node.invisibleAnnotations.stream(), node.invisibleAnnotations.stream())
                 .filter(annot -> annot.desc.equals('L' + Type.getInternalName(clazz) + ';'))

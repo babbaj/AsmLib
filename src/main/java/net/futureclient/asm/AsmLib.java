@@ -1,12 +1,9 @@
 package net.futureclient.asm;
 
 import me.hugenerd.load.config.MemeConfig;
-import net.futureclient.asm.config.Config;
 import net.futureclient.asm.config.ConfigManager;
-import net.futureclient.asm.transformer.ClassTransformer;
 import net.futureclient.asm.transformer.util.AnnotationInfo;
 import net.futureclient.asm.transformer.util.TransformerGenerator;
-import net.futureclient.asm.transformer.wrapper.LaunchWrapperTransformer;
 import net.minecraft.launchwrapper.Launch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public final class AsmLib {
     private AsmLib() {}
@@ -27,10 +23,12 @@ public final class AsmLib {
     // Stores @Transformer data for transformer classes
     // maps class name to annotation
     // TODO: this really needs to be put somewhere else
-    public static Map<String, AnnotationInfo> transformerAnnotations = new HashMap<>();
+    public static final Map<String, AnnotationInfo> transformerAnnotations = new HashMap<>();
 
     // pre initialization
     static {
+        if (AsmLib.class.getClassLoader() != Launch.classLoader)
+            throw new IllegalStateException("AsmLib must me loaded by the LaunchClassLoader");
         LOGGER.info("AsmLib v{}", VERSION);
         AsmLib.getConfigManager().addConfiguration(new MemeConfig()); // TODO: get configs
     }
