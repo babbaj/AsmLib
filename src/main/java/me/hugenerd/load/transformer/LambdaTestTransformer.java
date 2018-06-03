@@ -15,13 +15,9 @@ import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 @Transformer(Main.class)
 public class LambdaTestTransformer {
 
-    @Inject(target = "main([Ljava/lang/String;)V")
+    @Inject(name = "main", args = {String[].class})
     public void inject(MethodNode node) {
-        //node.instructions.insert(new MethodInsnNode(INVOKESTATIC, Type.getInternalName(getClass()), "onMain", "()V", false));
         node.instructions.insert(new MethodInsnNode(INVOKESTATIC, Type.getInternalName(getClass()), "lambda$inject$0", "()V", false));
-
-        test(() -> System.out.println("cool lambda"));
+        Runnable r = () -> System.out.println("cool lambda");
     }
-
-    private void test(Runnable r) {}
 }

@@ -20,7 +20,7 @@ public class AnnotationInfo {
     private final ImmutableMap<String, ?> valueMap;
 
     public static AnnotationInfo fromAsm(ClassNode node, Class<? extends Annotation> clazz) {
-        return Stream.concat(node.invisibleAnnotations.stream(), node.invisibleAnnotations.stream())
+        return node.visibleAnnotations.stream()
                 .filter(annot -> annot.desc.equals('L' + Type.getInternalName(clazz) + ';'))
                 .findFirst()
                 .map(AnnotationInfo::fromAsm)
@@ -61,8 +61,8 @@ public class AnnotationInfo {
      * See {@link org.objectweb.asm.tree.AnnotationNode#values}
      */
     private static Map<String, ?> createValueMap(AnnotationNode annotation) {
-        Iterator<Object> iter = annotation.values.iterator();
         Map<String, Object> out = new HashMap<>();
+        Iterator<Object> iter = annotation.values.iterator();
         while (iter.hasNext()) {
             out.put((String)iter.next(), iter.next());
         }

@@ -13,5 +13,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Hook {
-    String name() default ""; // probably gay
+    String alias() default ""; // probably gay
 }

@@ -1,16 +1,21 @@
 package net.futureclient.asm.internal.transformer;
 
-import jdk.internal.org.objectweb.asm.Type;
 import net.futureclient.asm.AsmLib;
+import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.annotation.Transformer;
 import net.futureclient.asm.transformer.util.AnnotationInfo;
 import net.minecraft.launchwrapper.IClassTransformer;
+import org.apache.logging.log4j.core.helpers.Assert;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.lang.annotation.Annotation;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -46,20 +51,73 @@ public class TransformerPreProcessor implements IClassTransformer {
     }
 
     private boolean hasAnnotation(ClassNode cn, Class<? extends Annotation> clazz) {
-        return cn.invisibleAnnotations.stream()
+        return cn.visibleAnnotations.stream()
                 .anyMatch(node -> node.desc.equals('L' + Type.getInternalName(clazz) + ';'));
     }
 
     private void processClass(ClassNode clazz, String name) {
         // TODO: process @Transformer annotation and lambdas
-        AnnotationInfo info = AnnotationInfo.fromAsm(clazz, Transformer.class);
-        AsmLib.transformerAnnotations.put(name, info);
         clazz.methods.stream()
                 .filter(method -> (method.access & ACC_SYNTHETIC) != 0)
                 .forEach(method -> {
                     method.access &= ~ACC_PRIVATE;
                     method.access |= ACC_PUBLIC;
                 });
+
+        clazz.methods.stream()
+                .map(node -> node.visibleAnnotations)
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)
+                .filter(node -> node.desc.equals('L' + Type.getInternalName(Inject.class) + ';'))
+                .findFirst()
+                .ifPresent(node -> processInject(node));
+
+        clazz.visibleAnnotations.stream()
+                .filter(node -> node.desc.equals('L' + Type.getInternalName(Transformer.class) + ';'))
+                .findFirst()
+                .ifPresent(node -> processTransformer(node));
+    }
+
+    // process @Transformer annotation
+    @SuppressWarnings("unchecked")
+    private static void processTransformer(AnnotationNode node) {
+        AnnotationInfo info = AnnotationInfo.fromAsm(node);
+        if (info.getValue("targets") == null) {
+            node.values.add(0, "targets");
+            node.values.add(1, new ArrayList<String>());
+        }
+        List<String> targets = (List<String>)node.values.get(node.values.indexOf("targets") + 1);
+        if (node.values.contains("value")) {
+            targets.addAll(info.<List<Type>>getValue("value").stream()
+                    .map(Type::getClassName)
+                    .collect(Collectors.toList()));
+            int i = node.values.indexOf("value");
+            node.values.remove(i + 1);
+            node.values.remove(i);
+        }
+
+    }
+
+    // process @Inject annotation
+    private static void processInject(AnnotationNode node) {
+        AnnotationInfo info = AnnotationInfo.fromAsm(node);
+        if (info.getValue("target") == null) {
+            String name = info.getValue("name");
+            if (name == null) throw new IllegalArgumentException("Failed to supply method name");
+            String ret = Optional.ofNullable(info.<Type>getValue("ret")).orElse(Type.VOID_TYPE).getDescriptor();
+            String args = Optional.ofNullable(info.<List<Type>>getValue("args"))
+                    .map(list -> list.stream().map(Type::getDescriptor).collect(Collectors.joining()))
+                    .orElse("");
+
+            final String fullDesc = String.format("%s(%s)%s", name, args, ret);
+            int i = node.values.indexOf("target");
+            if (i == -1) {
+                node.values.add(0, "target");
+                node.values.add(1, fullDesc);
+            } else {
+                node.values.set(i + 1, fullDesc);
+            }
+        }
     }
 
     private boolean configContainsClass(String className) {

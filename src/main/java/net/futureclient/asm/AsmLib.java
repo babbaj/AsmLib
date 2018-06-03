@@ -20,11 +20,6 @@ public final class AsmLib {
 
     private static ConfigManager configManager = new ConfigManager();
 
-    // Stores @Transformer data for transformer classes
-    // maps class name to annotation
-    // TODO: this really needs to be put somewhere else
-    public static final Map<String, AnnotationInfo> transformerAnnotations = new HashMap<>();
-
     // pre initialization
     static {
         if (AsmLib.class.getClassLoader() != Launch.classLoader)

@@ -26,7 +26,7 @@ public final class TransformerGenerator {
 
     // group 1 = method name;
     // group 2 = args/return type
-    private static final Pattern DESCRIPTOR_PATTERN = Pattern.compile("(.+)(\\(.+\\).+)");
+    private static final Pattern DESCRIPTOR_PATTERN = Pattern.compile("(.+)(\\(.*\\).+)");
 
     private static final Collection<Class<? extends Annotation>> METHOD_ANNOTATION_CLASSES = Arrays.asList(
             Inject.class
@@ -36,11 +36,11 @@ public final class TransformerGenerator {
     public static ClassTransformer fromClass(Class<?> clazz) {
         checkClass(clazz);
 
-        AnnotationInfo info = AsmLib.transformerAnnotations.get(clazz.getName());
+        Transformer info = clazz.getAnnotation(Transformer.class);
         try {
             Object instance = clazz.newInstance();
-            String targetClass = info.<List<Type>>getValue("value").get(0).getClassName(); // TODO: check both targets and value
-            ClassTransformer transformer = new ClassTransformer(targetClass) {};//new ReflectiveClassTransformer(instance, info.targets()[0]);
+            String targetClass = info.targets()[0]; // TODO: allow for multiple target classes
+            ClassTransformer transformer = new ClassTransformer(targetClass) {};
             Stream.of(clazz.getDeclaredMethods())
                     .filter(m -> !isConstructor(m))
                     .filter(m -> isValidMethodTransformer(m))
@@ -72,7 +72,7 @@ public final class TransformerGenerator {
         String name = parsed[0];
         String desc = parsed[1];
 
-        final Class<?>[] params = method.getParameterTypes(); // TODO: stuff
+        final Class<?>[] params = method.getParameterTypes(); // TODO: check that the @Inject method as valid parameters
 
         return new MethodTransformer(name, desc) { // maybe don't use anonymous class?
             @Override
@@ -89,7 +89,7 @@ public final class TransformerGenerator {
 
     private static String[] parseTarget(String method) {
         final Matcher m = DESCRIPTOR_PATTERN.matcher(method);
-        if (!m.matches()) throw new IllegalArgumentException("Invalid method descriptor");
+        if (!m.matches()) throw new IllegalArgumentException(String.format("Invalid method descriptor: \"%s\"", method));
         return new String[] {m.group(1), m.group(2)};
     }
 

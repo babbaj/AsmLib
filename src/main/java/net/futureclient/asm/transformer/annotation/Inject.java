@@ -17,5 +17,17 @@ public @interface Inject {
      *
      * ex: "main([Ljava/lang/String;)V"
      */
-    String target();
+    String target() default "";
+
+
+    /**
+     * These parameters will be converted to a String representation and will be returned by {@code target}.
+     * If {@code target} has already been defined then these will be ignored
+     */
+
+    String name() default "";
+
+    Class<?>[] args() default {};
+
+    Class<?> ret() default void.class;
 }
