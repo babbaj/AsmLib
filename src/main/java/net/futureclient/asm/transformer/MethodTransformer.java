@@ -1,5 +1,6 @@
 package net.futureclient.asm.transformer;
 
+import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
 public abstract class MethodTransformer {
@@ -12,7 +13,7 @@ public abstract class MethodTransformer {
         this.methodDesc = methodDescriptor;
     }
 
-    public abstract void inject(MethodNode methodNode);
+    public abstract void inject(MethodNode methodNode, ClassNode clazz);
 
     public String getMethodName() {
         return this.methodName;

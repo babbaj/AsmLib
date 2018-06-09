@@ -1,7 +1,7 @@
 package me.hugenerd.tweaker;
 
 import net.futureclient.asm.AsmLib;
-import net.futureclient.asm.internal.transformer.TransformerPreProcessor;
+import net.futureclient.asm.internal.TransformerPreProcessor;
 import net.futureclient.asm.transformer.wrapper.LaunchWrapperTransformer;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;

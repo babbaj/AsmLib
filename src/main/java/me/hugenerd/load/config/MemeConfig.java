@@ -1,9 +1,6 @@
 package me.hugenerd.load.config;
 
-import me.hugenerd.load.transformer.MainTransformer;
-import me.hugenerd.load.transformer.TestTransformer;
 import net.futureclient.asm.config.Config;
-import net.futureclient.asm.transformer.ClassTransformer;
 
 public final class MemeConfig extends Config {
 

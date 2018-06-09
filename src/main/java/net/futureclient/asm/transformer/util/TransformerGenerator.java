@@ -1,11 +1,13 @@
 package net.futureclient.asm.transformer.util;
 
 import net.futureclient.asm.AsmLib;
+import net.futureclient.asm.transformer.AsmMethod;
 import net.futureclient.asm.transformer.ClassTransformer;
 import net.futureclient.asm.transformer.MethodTransformer;
 import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.annotation.Transformer;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.lang.annotation.Annotation;
@@ -56,16 +58,13 @@ public final class TransformerGenerator {
 
     // checks if a class is a valid transformer class
     private static void checkClass(Class<?> clazz) {
-        // TODO: add annotation or something to show that a class has been processed by the preprocessor
-        //if (!clazz.isAnnotationPresent(Transformer.class))
-        //  throw new IllegalArgumentException("Missing @Transformer annotation");
+        if (!clazz.isAnnotationPresent(Transformer.class))
+            throw new IllegalArgumentException("Missing @Transformer annotation");
         if (!hasValidConstructor(clazz))
             throw new IllegalArgumentException("Invalid constructor, expected 0 args");
     }
 
     // create a method transformer that encapsulates a java.lang.reflect.Method
-    // TODO: support more annotations
-    @Deprecated
     public static MethodTransformer createMethodTransformer(Method method, Object instance) {
         Inject info = method.getAnnotation(Inject.class);
         final String[] parsed = parseTarget(info.target());
@@ -76,9 +75,13 @@ public final class TransformerGenerator {
 
         return new MethodTransformer(name, desc) { // maybe don't use anonymous class?
             @Override
-            public void inject(MethodNode methodNode) {
+            public void inject(MethodNode methodNode, ClassNode clazz) {
                 try {
-                    method.invoke(instance, methodNode);
+                    if (params[0] == AsmMethod.class) {
+                        method.invoke(instance, new AsmMethod(methodNode, clazz)); // TODO refactor this maybe
+                    } else {
+                        method.invoke(instance, methodNode);
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

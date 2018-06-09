@@ -1,6 +1,5 @@
 package net.futureclient.asm.transformer.wrapper;
 
-import me.hugenerd.load.config.MemeConfig;
 import net.futureclient.asm.AsmLib;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.transformer.ClassTransformer;

@@ -9,7 +9,6 @@ import java.util.List;
 public abstract class ClassTransformer implements Comparable<ClassTransformer> {
 
     private final List<MethodTransformer> methodTransformers = new ArrayList<>();
-    private final List<FieldTransformer> fieldTransformers = new ArrayList<>();
 
     // TODO: support multiple target classes
     private final String className;
@@ -34,12 +33,6 @@ public abstract class ClassTransformer implements Comparable<ClassTransformer> {
     protected void inject(ClassNode classNode) {}
 
     public final void transform(ClassNode classNode) {
-        getFieldTransformers().forEach(fieldTransformer ->
-                classNode.fields.stream()
-                        .filter(fieldNode -> fieldNode.name.equals(fieldTransformer.getFieldName()))
-                        .findFirst()
-                        .ifPresent(fieldTransformer::inject));
-
         getMethodTransformers().forEach(methodTransformer ->
                 classNode.methods.stream()
                         .filter(methodNode ->
@@ -47,21 +40,13 @@ public abstract class ClassTransformer implements Comparable<ClassTransformer> {
                             methodNode.desc.equals(methodTransformer.getMethodDesc())
                         )
                         .findFirst()
-                        .ifPresent(methodTransformer::inject));
+                        .ifPresent(method -> methodTransformer.inject(method, classNode)));
 
         this.inject(classNode);
     }
 
-    protected void addFieldTransformers(FieldTransformer... fieldTransformers) {
-        this.fieldTransformers.addAll(Arrays.asList(fieldTransformers));
-    }
-
     protected void addMethodTransformers(MethodTransformer... methodTransformers) {
         this.methodTransformers.addAll(Arrays.asList(methodTransformers));
-    }
-
-    public List<FieldTransformer> getFieldTransformers() {
-        return this.fieldTransformers;
     }
 
     public List<MethodTransformer> getMethodTransformers() {

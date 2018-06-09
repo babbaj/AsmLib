@@ -1,21 +1,20 @@
-package net.futureclient.asm.internal.transformer;
+package net.futureclient.asm.internal;
 
+import com.google.common.collect.Streams;
 import net.futureclient.asm.AsmLib;
 import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.annotation.Transformer;
 import net.futureclient.asm.transformer.util.AnnotationInfo;
 import net.minecraft.launchwrapper.IClassTransformer;
-import org.apache.logging.log4j.core.helpers.Assert;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.*;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -25,7 +24,7 @@ import static org.objectweb.asm.Opcodes.*;
  * <p>
  * This class is responsible for processing the bytecode of transformers
  */
-public class TransformerPreProcessor implements IClassTransformer {
+public final class TransformerPreProcessor implements IClassTransformer {
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
@@ -40,7 +39,7 @@ public class TransformerPreProcessor implements IClassTransformer {
                 return basicClass;
             }
 
-            processClass(cn, transformedName);
+            processClass(cn);
 
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
             cn.accept(cw);
@@ -50,13 +49,50 @@ public class TransformerPreProcessor implements IClassTransformer {
         return basicClass;
     }
 
-    private boolean hasAnnotation(ClassNode cn, Class<? extends Annotation> clazz) {
-        return cn.visibleAnnotations.stream()
-                .anyMatch(node -> node.desc.equals('L' + Type.getInternalName(clazz) + ';'));
+    private boolean configContainsClass(String className) {
+        return AsmLib.getConfigManager()
+                .getClassTransformers().stream()
+                .anyMatch(className::equals);
     }
 
-    private void processClass(ClassNode clazz, String name) {
+
+    private boolean hasAnnotation(ClassNode cn, Class<? extends Annotation> clazz) {
+        return cn.visibleAnnotations.stream()
+                .anyMatch(node -> node.desc.equals(Type.getDescriptor(clazz)));
+    }
+
+    private void processLambdas(ClassNode clazz, MethodNode method) {
+        Streams.stream(method.instructions.iterator())
+                .filter(InvokeDynamicInsnNode.class::isInstance)
+                .map(InvokeDynamicInsnNode.class::cast)
+                .forEach(node -> {
+                    if (!capturesVariables(node)) {
+                        injectAtLambda(method, node);
+                    }
+                });
+    }
+    private boolean capturesVariables(InvokeDynamicInsnNode node) {
+        return Type.getArgumentTypes(node.desc).length > 0;
+    }
+    private void injectAtLambda(MethodNode method, InvokeDynamicInsnNode node) {
+        Handle methodRef = (Handle)node.bsmArgs[1];
+
+        InsnList list = new InsnList();
+        list.add(new InsnNode(DUP));
+        list.add(new LdcInsnNode(methodRef.getOwner()));
+        list.add(new LdcInsnNode(methodRef.getName()));
+        list.add(new LdcInsnNode(methodRef.getDesc()));
+        list.add(new MethodInsnNode(INVOKESTATIC, Type.getInternalName(LambdaManager.class), "addLambda",
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"));
+
+        method.instructions.insert(node, list);
+    }
+
+    private void processClass(ClassNode clazz) {
         // TODO: process @Transformer annotation and lambdas
+        clazz.methods.forEach(node -> processLambdas(clazz, node));
+
+        // TODO: only apply to lambda methods
         clazz.methods.stream()
                 .filter(method -> (method.access & ACC_SYNTHETIC) != 0)
                 .forEach(method -> {
@@ -68,19 +104,19 @@ public class TransformerPreProcessor implements IClassTransformer {
                 .map(node -> node.visibleAnnotations)
                 .filter(Objects::nonNull)
                 .flatMap(List::stream)
-                .filter(node -> node.desc.equals('L' + Type.getInternalName(Inject.class) + ';'))
+                .filter(node -> node.desc.equals(Type.getDescriptor(Inject.class)))
                 .findFirst()
-                .ifPresent(node -> processInject(node));
+                .ifPresent(this::processInject);
 
         clazz.visibleAnnotations.stream()
-                .filter(node -> node.desc.equals('L' + Type.getInternalName(Transformer.class) + ';'))
+                .filter(node -> node.desc.equals(Type.getDescriptor(Transformer.class)))
                 .findFirst()
-                .ifPresent(node -> processTransformer(node));
+                .ifPresent(this::processTransformer);
     }
 
     // process @Transformer annotation
     @SuppressWarnings("unchecked")
-    private static void processTransformer(AnnotationNode node) {
+    private void processTransformer(AnnotationNode node) {
         AnnotationInfo info = AnnotationInfo.fromAsm(node);
         if (info.getValue("targets") == null) {
             node.values.add(0, "targets");
@@ -99,7 +135,7 @@ public class TransformerPreProcessor implements IClassTransformer {
     }
 
     // process @Inject annotation
-    private static void processInject(AnnotationNode node) {
+    private void processInject(AnnotationNode node) {
         AnnotationInfo info = AnnotationInfo.fromAsm(node);
         if (info.getValue("target") == null) {
             String name = info.getValue("name");
@@ -118,11 +154,5 @@ public class TransformerPreProcessor implements IClassTransformer {
                 node.values.set(i + 1, fullDesc);
             }
         }
-    }
-
-    private boolean configContainsClass(String className) {
-        return AsmLib.getConfigManager()
-                .getClassTransformers().stream()
-                .anyMatch(className::equals);
     }
 }
