@@ -33,7 +33,6 @@ public final class TransformerPreProcessor implements IClassTransformer {
             ClassReader cr = new ClassReader(basicClass);
             cr.accept(cn, 0);
 
-            // TODO: read annotation
             if (!hasAnnotation(cn, Transformer.class)) {
                 AsmLib.LOGGER.error("Transformer Class {} is missing @{} annotation", transformedName, Transformer.class.getSimpleName());
                 return basicClass;
@@ -89,7 +88,6 @@ public final class TransformerPreProcessor implements IClassTransformer {
     }
 
     private void processClass(ClassNode clazz) {
-        // TODO: process @Transformer annotation and lambdas
         clazz.methods.forEach(node -> processLambdas(clazz, node));
 
         // TODO: only apply to lambda methods

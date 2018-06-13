@@ -1,6 +1,7 @@
 package net.futureclient.asm.transformer.util;
 
 import net.futureclient.asm.AsmLib;
+import net.futureclient.asm.config.Config;
 import net.futureclient.asm.transformer.AsmMethod;
 import net.futureclient.asm.transformer.ClassTransformer;
 import net.futureclient.asm.transformer.MethodTransformer;
@@ -10,6 +11,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -34,8 +36,12 @@ public final class TransformerGenerator {
             Inject.class
     );
 
-    //@Deprecated
+
     public static ClassTransformer fromClass(Class<?> clazz) {
+        return fromClass(clazz, null);
+    }
+
+    public static ClassTransformer fromClass(Class<?> clazz, @Nullable Config config) {
         checkClass(clazz);
 
         Transformer info = clazz.getAnnotation(Transformer.class);
@@ -46,7 +52,7 @@ public final class TransformerGenerator {
             Stream.of(clazz.getDeclaredMethods())
                     .filter(m -> !isConstructor(m))
                     .filter(m -> isValidMethodTransformer(m))
-                    .map(m -> createMethodTransformer(m, instance))
+                    .map(m -> createMethodTransformer(m, instance, config))
                     .forEach(transformer.getMethodTransformers()::add);
             return transformer;
 
@@ -65,7 +71,7 @@ public final class TransformerGenerator {
     }
 
     // create a method transformer that encapsulates a java.lang.reflect.Method
-    public static MethodTransformer createMethodTransformer(Method method, Object instance) {
+    public static MethodTransformer createMethodTransformer(Method method, Object instance, @Nullable Config config) {
         Inject info = method.getAnnotation(Inject.class);
         final String[] parsed = parseTarget(info.target());
         String name = parsed[0];
@@ -77,11 +83,13 @@ public final class TransformerGenerator {
             @Override
             public void inject(MethodNode methodNode, ClassNode clazz) {
                 try {
-                    if (params[0] == AsmMethod.class) {
-                        method.invoke(instance, new AsmMethod(methodNode, clazz)); // TODO refactor this maybe
-                    } else {
+                    if (params[0] == AsmMethod.class)
+                        method.invoke(instance, new AsmMethod(methodNode, clazz, config)); // TODO refactor this maybe
+                     else if (params[0] == MethodNode.class)
                         method.invoke(instance, methodNode);
-                    }
+                     else
+                        throw new IllegalArgumentException("Invalid arguments for @Inject: expected MethodNode or AsmMethod");
+
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

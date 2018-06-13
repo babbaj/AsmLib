@@ -18,8 +18,6 @@ public final class AsmLib {
     public static final Logger LOGGER = LogManager.getLogger("AsmLib");
     private static final String VERSION = "0.1";
 
-    private static ConfigManager configManager = new ConfigManager();
-
     // pre initialization
     static {
         if (AsmLib.class.getClassLoader() != Launch.classLoader)
@@ -55,6 +53,6 @@ public final class AsmLib {
 
 
     public static ConfigManager getConfigManager() {
-        return configManager;
+        return ConfigManager.INSTANCE;
     }
 }

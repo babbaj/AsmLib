@@ -15,7 +15,9 @@ public class ConfigManager {
     // TODO: maybe put somewhere else
     private final Map<String, Config> transformerCache = new HashMap<>();
 
-    public ConfigManager() {}
+    public static final ConfigManager INSTANCE = new ConfigManager();
+
+    private ConfigManager() {}
 
     public void addConfiguration(Config config) {
         this.configs.add(config);
