@@ -11,6 +11,8 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,9 +25,7 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        //LOGGER.log(Level.INFO, "LaunchWrapperTransformer: " + transformedName);
-
-        List<ClassTransformer> classTransformers = this.getTransformers(transformedName);
+         List<ClassTransformer> classTransformers = this.getTransformers(transformedName);
 
         if (!classTransformers.isEmpty()) {
             ClassNode cn = new ClassNode();
@@ -48,10 +48,21 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
 
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
             cn.accept(cw);
+            //log("MainOutput.class", cw.toByteArray());
             return cw.toByteArray();
         }
 
         return basicClass;
+    }
+
+    private void log(String fileName, byte[] bytes) {
+        File f = new File(fileName);
+        try {
+            f.createNewFile();
+            Files.write(f.toPath(), bytes);
+        } catch (Exception e) {
+
+        }
     }
 
     private List<ClassTransformer> getTransformers(String name) {

@@ -2,6 +2,7 @@ package net.futureclient.asm.transformer.util;
 
 import net.futureclient.asm.AsmLib;
 import net.futureclient.asm.config.Config;
+import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.transformer.AsmMethod;
 import net.futureclient.asm.transformer.ClassTransformer;
 import net.futureclient.asm.transformer.MethodTransformer;
@@ -17,6 +18,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -52,7 +54,7 @@ public final class TransformerGenerator {
             Stream.of(clazz.getDeclaredMethods())
                     .filter(m -> !isConstructor(m))
                     .filter(m -> isValidMethodTransformer(m))
-                    .map(m -> createMethodTransformer(m, instance, config))
+                    .map(m -> createMethodTransformer(m, instance, Optional.ofNullable(config)))
                     .forEach(transformer.getMethodTransformers()::add);
             return transformer;
 
@@ -71,7 +73,7 @@ public final class TransformerGenerator {
     }
 
     // create a method transformer that encapsulates a java.lang.reflect.Method
-    public static MethodTransformer createMethodTransformer(Method method, Object instance, @Nullable Config config) {
+    public static MethodTransformer createMethodTransformer(Method method, Object instance, Optional<Config> config) {
         Inject info = method.getAnnotation(Inject.class);
         final String[] parsed = parseTarget(info.target());
         String name = parsed[0];
@@ -83,8 +85,9 @@ public final class TransformerGenerator {
             @Override
             public void inject(MethodNode methodNode, ClassNode clazz) {
                 try {
+                    // TODO refactor this maybe
                     if (params[0] == AsmMethod.class)
-                        method.invoke(instance, new AsmMethod(methodNode, clazz, config)); // TODO refactor this maybe
+                        method.invoke(instance, new AsmMethod(methodNode, clazz, config.orElse(AsmLib.getConfigManager().getDefaultConfig())));
                      else if (params[0] == MethodNode.class)
                         method.invoke(instance, methodNode);
                      else

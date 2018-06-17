@@ -7,13 +7,10 @@ import java.util.stream.Collectors;
 
 public class ConfigManager {
 
-    private final Config default_config = new Config("default", 0); // for orphans
+    private final Config default_config = new Config("default", 0);
 
-    private final List<Config> configs = Lists.newArrayList(default_config);
-
-    // used to remember what config a transformer belongs to
-    // TODO: maybe put somewhere else
-    private final Map<String, Config> transformerCache = new HashMap<>();
+    private final Set<Config> configs = new TreeSet<>(Config::compareTo);
+    { configs.add(default_config); }
 
     public static final ConfigManager INSTANCE = new ConfigManager();
 
@@ -23,27 +20,12 @@ public class ConfigManager {
         this.configs.add(config);
     }
 
-    public void addTransformer(String className, Config config) {
-        transformerCache.merge(className, config, (oldCfg, newCfg) -> oldCfg.compareTo(newCfg) > 0 ? oldCfg : newCfg);
-    }
-
-    // TODO: don't return new list
-    public Collection<Config> getConfigs() {
-        return Collections.unmodifiableCollection(
-                this.configs.stream()
-                .sorted(Config::compareTo)
-                .collect(Collectors.toList()));
+    public Set<Config> getConfigs() {
+        return configs;
     }
 
     public Config getDefaultConfig() {
         return default_config;
     }
 
-    public Map<String, Config> getTransformerCache() {
-        return transformerCache;
-    }
-
-    public Set<String> getClassTransformers() {
-        return transformerCache.keySet();
-    }
 }
