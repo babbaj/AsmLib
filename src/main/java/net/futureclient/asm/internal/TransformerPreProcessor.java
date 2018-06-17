@@ -84,8 +84,9 @@ public final class TransformerPreProcessor implements IClassTransformer {
         list.add(new LdcInsnNode(methodRef.getOwner()));
         list.add(new LdcInsnNode(methodRef.getName()));
         list.add(new LdcInsnNode(methodRef.getDesc()));
+        list.add(new LdcInsnNode(methodRef.getTag()));
         list.add(new MethodInsnNode(INVOKESTATIC, Type.getInternalName(LambdaManager.class), "addLambda",
-                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"));
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V"));
 
         method.instructions.insert(node, list);
     }

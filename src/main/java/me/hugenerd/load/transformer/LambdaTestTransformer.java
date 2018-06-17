@@ -5,6 +5,7 @@ import net.futureclient.asm.transformer.AsmMethod;
 import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.annotation.Transformer;
 
+import java.io.PrintStream;
 
 
 /**
@@ -15,7 +16,8 @@ public class LambdaTestTransformer {
 
     @Inject(name = "main", args = {String[].class})
     public void inject(AsmMethod method) {
+        method.get(() -> System.out);
         method.get(() -> "👌👌👌👌👌👌👌👌");
-        method.consume(System.out::println);
+        method.<PrintStream, String>consume_2(PrintStream::println);
     }
 }

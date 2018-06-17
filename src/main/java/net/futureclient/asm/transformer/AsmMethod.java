@@ -10,6 +10,7 @@ import org.objectweb.asm.tree.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -47,8 +48,9 @@ public class AsmMethod {
     public void invoke(Object instance) {
         String[] func = LambdaManager.lambdas.get(instance);
         if (func != null) {
+            int tag = Integer.valueOf(func[3]); // TODO: do this properly
             this.method.instructions.insertBefore(cursor,
-                    new MethodInsnNode(INVOKESTATIC, func[0], func[1], func[2]));
+                    new MethodInsnNode(tag == H_INVOKESTATIC ? INVOKESTATIC : INVOKEVIRTUAL, func[0], func[1], func[2]));
         } else {
             assertValidFunc(instance);
             final Method abstractMethod = getMethod(instance);
@@ -114,6 +116,10 @@ public class AsmMethod {
     }
 
     public <T> void consume(Consumer<T> consumer) {
+        invoke(consumer);
+    }
+
+    public <T, U> void consume_2(BiConsumer<T, U> consumer) {
         invoke(consumer);
     }
 
