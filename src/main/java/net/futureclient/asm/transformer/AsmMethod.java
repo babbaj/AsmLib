@@ -45,12 +45,28 @@ public class AsmMethod {
         carrierClassIndex.putIfAbsent(configIn.getName(), 0);
     }
 
-    public void invoke(Object instance) {
+    private int opcodeFromTag(int tag) {
+        switch (tag) {
+            case H_INVOKESTATIC:
+                return INVOKESTATIC;
+            case H_INVOKEVIRTUAL:
+                return INVOKEVIRTUAL;
+            case H_INVOKEINTERFACE:
+                return INVOKEINTERFACE;
+            case H_INVOKESPECIAL:
+            case H_NEWINVOKESPECIAL:
+                return INVOKESPECIAL; // not sure about this
+            default:
+                throw new IllegalArgumentException("Invalid handle kind: " + Integer.toHexString(tag));
+        }
+    }
+
+    public <T> void invoke(T instance) {
         String[] func = LambdaManager.lambdas.get(instance);
         if (func != null) {
-            int tag = Integer.valueOf(func[3]); // TODO: do this properly
+            final int opcode = opcodeFromTag(Integer.valueOf(func[3])); // TODO: do this properly
             this.method.instructions.insertBefore(cursor,
-                    new MethodInsnNode(tag == H_INVOKESTATIC ? INVOKESTATIC : INVOKEVIRTUAL, func[0], func[1], func[2]));
+                    new MethodInsnNode(opcode, func[0], func[1], func[2]));
         } else {
             assertValidFunc(instance);
             final Method abstractMethod = getMethod(instance);
@@ -99,6 +115,7 @@ public class AsmMethod {
 
     // throws an IllegalArgumentException if the object is not an instance of a functional interface
     private void assertValidFunc(Object instance){
+        Objects.requireNonNull(instance);
         if (instance.getClass().getInterfaces().length == 0)
             throw new IllegalArgumentException("Object does not implement any interface");
         if (getAbstractMethods(instance.getClass()).count() > 1)
