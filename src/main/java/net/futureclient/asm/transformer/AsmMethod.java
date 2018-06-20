@@ -4,6 +4,7 @@ import net.futureclient.asm.AsmLib;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.internal.LambdaManager;
 import net.futureclient.asm.internal.TransformerUtil;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
@@ -62,11 +63,11 @@ public class AsmMethod {
     }
 
     public <T> void invoke(T instance) {
-        String[] func = LambdaManager.lambdas.get(instance);
+        Handle func = LambdaManager.lambdas.get(instance);
         if (func != null) {
-            final int opcode = opcodeFromTag(Integer.valueOf(func[3])); // TODO: do this properly
+            final int opcode = opcodeFromTag(func.getTag());
             this.method.instructions.insertBefore(cursor,
-                    new MethodInsnNode(opcode, func[0], func[1], func[2]));
+                    new MethodInsnNode(opcode, func.getOwner(), func.getName(), func.getDesc()));
         } else {
             assertValidFunc(instance);
             final Method abstractMethod = getMethod(instance);
@@ -127,15 +128,17 @@ public class AsmMethod {
         invoke(r);
     }
 
-    // invoke a function that returns a value
+    // function that returns an object
     public <T> void get(Supplier<T> supplier) {
         invoke(supplier);
     }
 
+    // function that takes an object as an argument
     public <T> void consume(Consumer<T> consumer) {
         invoke(consumer);
     }
 
+    // function that takes 2 objects as arguments
     public <T, U> void consume_2(BiConsumer<T, U> consumer) {
         invoke(consumer);
     }

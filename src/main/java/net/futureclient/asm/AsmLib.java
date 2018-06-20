@@ -2,12 +2,15 @@ package net.futureclient.asm;
 
 import me.hugenerd.load.config.MemeConfig;
 import net.futureclient.asm.config.ConfigManager;
+import net.futureclient.asm.internal.TransformerPreProcessor;
 import net.futureclient.asm.transformer.util.TransformerGenerator;
+import net.futureclient.asm.transformer.wrapper.LaunchWrapperTransformer;
 import net.minecraft.launchwrapper.Launch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Objects;
+import java.util.Random;
 
 public final class AsmLib {
     private AsmLib() {}
@@ -15,16 +18,19 @@ public final class AsmLib {
     public static final Logger LOGGER = LogManager.getLogger("AsmLib");
     private static final String VERSION = "0.1";
 
-    // pre initialization
-    static {
-        if (AsmLib.class.getClassLoader() != Launch.classLoader)
-            throw new IllegalStateException("AsmLib must me loaded by the LaunchClassLoader");
+
+    static void init() {
         LOGGER.info("AsmLib v{}", VERSION);
+
+        Launch.classLoader.registerTransformer(TransformerPreProcessor.class.getName());
+        Launch.classLoader.registerTransformer(LaunchWrapperTransformer.class.getName());
+
         AsmLib.getConfigManager().addConfiguration(new MemeConfig()); // TODO: get configs
+
+        initTransformerPatches();
     }
 
-    // to be called via reflection
-    public static void initTransformerPatches() {
+    private static void initTransformerPatches() {
         getConfigManager().getConfigs().forEach(config -> {
             config.getTransformerClassNames().stream()
                     .map(AsmLib::loadClass)
