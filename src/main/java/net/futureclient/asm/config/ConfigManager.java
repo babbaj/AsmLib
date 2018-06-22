@@ -1,6 +1,5 @@
 package net.futureclient.asm.config;
 
-import com.google.common.collect.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -9,7 +8,7 @@ public class ConfigManager {
 
     private final Config default_config = new Config("default", 0);
 
-    private final List<Config> configs = new ArrayList<>();
+    private final Set<Config> configs = new HashSet<>();
     { configs.add(default_config); }
 
     public static final ConfigManager INSTANCE = new ConfigManager();
@@ -18,11 +17,12 @@ public class ConfigManager {
 
     public void addConfiguration(Config config) {
         this.configs.add(config);
-        configs.sort(Config::compareTo);
     }
 
     public Collection<Config> getConfigs() {
-        return configs;
+        return Collections.unmodifiableCollection(configs.stream()
+                .sorted(Config::compareTo)
+                .collect(Collectors.toList()));
     }
 
     public Config getDefaultConfig() {
