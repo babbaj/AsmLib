@@ -1,5 +1,7 @@
 package me.hugenerd.tweaker;
 
+import me.hugenerd.load.config.MemeConfig;
+import net.futureclient.asm.AsmLib;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
@@ -14,7 +16,8 @@ public final class MemeTweaker implements ITweaker {
 
     @Override
     public void injectIntoClassLoader(LaunchClassLoader classLoader) {
-        // TODO: give AsmLib our config
+        //AsmLib.addConfig(new MemeConfig());
+        AsmLib.addConfig("test_config.json");
     }
 
     @Override

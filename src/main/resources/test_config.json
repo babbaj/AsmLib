@@ -1,0 +1,11 @@
+{
+  "name": "meme-mod",
+  "required": true,
+  "priority": 1000,
+
+  "transformers": {
+    "me.hugenerd.load.transformer": [
+      "LambdaTestTransformer"
+    ]
+  }
+}
