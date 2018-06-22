@@ -29,7 +29,7 @@ public final class AsmLib {
         final InputStream is = AsmLib.class.getClassLoader().getResourceAsStream(configResource);
         Objects.requireNonNull(is, "Failed to find config file: " + configResource);
         final JsonObject root = new JsonParser().parse(new InputStreamReader(is)).getAsJsonObject();
-        System.out.println("Reading config file: " + configResource);
+
         final Config config = Config.fromJson(root);
         addConfig(config);
     }

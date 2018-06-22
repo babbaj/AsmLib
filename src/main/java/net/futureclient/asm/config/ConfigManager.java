@@ -9,7 +9,7 @@ public class ConfigManager {
 
     private final Config default_config = new Config("default", 0);
 
-    private final Set<Config> configs = new TreeSet<>(Config::compareTo);
+    private final Multiset<Config> configs = TreeMultiset.create(Config::compareTo);
     { configs.add(default_config); }
 
     public static final ConfigManager INSTANCE = new ConfigManager();
@@ -20,7 +20,7 @@ public class ConfigManager {
         this.configs.add(config);
     }
 
-    public Set<Config> getConfigs() {
+    public Collection<Config> getConfigs() {
         return configs;
     }
 
