@@ -1,7 +1,7 @@
 package net.futureclient.asm.transformer.util;
 
 import com.google.common.collect.ImmutableMap;
-import jdk.internal.org.objectweb.asm.Type;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -9,7 +9,6 @@ import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * Created by Babbaj on 5/26/2018.
