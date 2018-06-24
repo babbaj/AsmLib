@@ -63,30 +63,32 @@ public final class TransformerPreProcessor implements IClassTransformer {
                 .anyMatch(node -> node.desc.equals(Type.getDescriptor(clazz)));
     }
 
+    // TODO: make sure we have java lambdas
     private void processLambdas(ClassNode clazz, MethodNode method) {
         Streams.stream(method.instructions.iterator())
                 .filter(InvokeDynamicInsnNode.class::isInstance)
                 .map(InvokeDynamicInsnNode.class::cast)
                 .forEach(node -> {
-                    if (!capturesVariables(node)) {
-                        injectAtLambda(method, node);
-                    }
+                    injectAtLambda(method, node);
                 });
-    }
-    private boolean capturesVariables(InvokeDynamicInsnNode node) {
-        return Type.getArgumentTypes(node.desc).length > 0;
     }
     private void injectAtLambda(MethodNode method, InvokeDynamicInsnNode node) {
         Handle methodRef = (Handle)node.bsmArgs[1];
+        Type realType = (Type)node.bsmArgs[2]; // MethodType
 
         InsnList list = new InsnList();
         list.add(new InsnNode(DUP));
+        // method reference
         list.add(new LdcInsnNode(methodRef.getOwner()));
         list.add(new LdcInsnNode(methodRef.getName()));
         list.add(new LdcInsnNode(methodRef.getDesc()));
         list.add(new LdcInsnNode(methodRef.getTag()));
+        // instantiatedMethodType
+        list.add(new LdcInsnNode(realType.getInternalName()));
+        // InvokeDynamicInsnNode desc
+        list.add(new LdcInsnNode(node.desc));
         list.add(new MethodInsnNode(INVOKESTATIC, Type.getInternalName(LambdaManager.class), "addLambda",
-                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V"));
+                "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V"));
 
         method.instructions.insert(node, list);
     }

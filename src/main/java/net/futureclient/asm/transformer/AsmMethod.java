@@ -2,6 +2,7 @@ package net.futureclient.asm.transformer;
 
 import net.futureclient.asm.AsmLib;
 import net.futureclient.asm.config.Config;
+import net.futureclient.asm.internal.LambdaInfo;
 import net.futureclient.asm.internal.LambdaManager;
 import net.futureclient.asm.internal.TransformerUtil;
 import org.objectweb.asm.Handle;
@@ -63,14 +64,14 @@ public class AsmMethod {
     }
 
     public <T> void invoke(T instance) {
-        Handle func = LambdaManager.lambdas.get(instance);
-        if (func != null) {
-            final int opcode = opcodeFromTag(func.getTag());
+        final LambdaInfo func = LambdaManager.lambdas.get(instance);
+        if (func != null && Type.getArgumentTypes(func.lambdaDesc).length == 0) {
+            final int opcode = opcodeFromTag(func.targetMethod.getTag());
             this.method.instructions.insertBefore(cursor,
-                    new MethodInsnNode(opcode, func.getOwner(), func.getName(), func.getDesc()));
+                    new MethodInsnNode(opcode, func.targetMethod.getOwner(), func.targetMethod.getName(), func.targetMethod.getDesc()));
         } else {
             assertValidFunc(instance);
-            final Method abstractMethod = getMethod(instance);
+            Method abstractMethod = getMethod(instance);
             final Class iface = Stream.of(instance.getClass().getInterfaces())
                     .filter(clazz -> Stream.of(clazz.getDeclaredMethods())
                             .filter(m -> Modifier.isAbstract(m.getModifiers()))
@@ -79,21 +80,25 @@ public class AsmMethod {
                     .findFirst()
                     .get();
 
-            final String carrierClassName = newCarrierClass(instance, iface, abstractMethod);
+            final Type realMethodDesc = Optional.ofNullable(func)
+                    .map(li -> li.realMethodDesc)
+                    .orElse(Type.getMethodType(Type.getMethodDescriptor(abstractMethod)));
+
+            final String carrierClassName = newCarrierClass(instance, iface, realMethodDesc, abstractMethod);
 
             this.method.instructions.insertBefore(cursor,
-                    new MethodInsnNode(INVOKESTATIC, carrierClassName, abstractMethod.getName(), Type.getMethodDescriptor(abstractMethod)));
+                    new MethodInsnNode(INVOKESTATIC, carrierClassName, abstractMethod.getName(), realMethodDesc.getDescriptor()));
         }
     }
 
-    private String newCarrierClass(Object instance, Class iface, Method abstractMethod) {
+    private String newCarrierClass(Object instance, Class iface, Type methodDesc, Method abstractMethod) {
         String className;
         for (int i = carrierClassIndex.get(config.getName()); ; i++) {
             className = String.format("#%s$carrier$%d", config.getName(), i);
             try {
                 Class.forName(className);
             } catch (ClassNotFoundException ignored) {
-                TransformerUtil.createCarrierClass(className, instance, iface, abstractMethod);
+                TransformerUtil.createCarrierClass(className, instance, iface, methodDesc, abstractMethod);
                 carrierClassIndex.put(config.getName(), i);
                 break;
             }
@@ -123,6 +128,9 @@ public class AsmMethod {
             throw new IllegalArgumentException("Object implements multiple or non functional interfaces");
     }
 
+    public void visitInsn(AbstractInsnNode node) {
+        this.method.instructions.insertBefore(cursor, node);
+    }
 
     public void run(Runnable r) {
         invoke(r);

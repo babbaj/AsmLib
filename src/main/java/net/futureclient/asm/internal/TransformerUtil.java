@@ -14,7 +14,7 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public final class TransformerUtil {
 
-    public static <T> Class<?> createCarrierClass(final String className, final T dataInstance, final Class<T> type, final Method abstractMethod) {
+    public static <T> Class<?> createCarrierClass(final String className, final T dataInstance, final Class<T> type, final Type realMethodDesc, final Method abstractMethod) {
         if (!type.isInstance(dataInstance)) throw new IllegalArgumentException("Data is not an instance of the given type");
 
         ClassWriter cw = new ClassWriter(0);
@@ -43,9 +43,10 @@ public final class TransformerUtil {
 
         {   // the static function we will use to invoke the lambda
             final Type[] argTypes = Type.getArgumentTypes(abstractMethod);
-            final Type retType = Type.getReturnType(abstractMethod);
+            final Type abstractRetType = Type.getReturnType(abstractMethod);
+            final Type realRetType = Type.getReturnType(realMethodDesc.getDescriptor());
 
-            MethodVisitor mv = cw.visitMethod(ACC_PUBLIC + ACC_STATIC, abstractMethod.getName(), Type.getMethodDescriptor(abstractMethod), null, null);
+            MethodVisitor mv = cw.visitMethod(ACC_PUBLIC + ACC_STATIC, abstractMethod.getName(), realMethodDesc.getDescriptor(), null, null);
             mv.visitCode();
             Label l0 = new Label();
             mv.visitLabel(l0);
@@ -62,7 +63,11 @@ public final class TransformerUtil {
             mv.visitLabel(l1);
             mv.visitLineNumber(12, l1);
 
-            mv.visitInsn(getReturnOpcode(retType));
+            // cast if we have the real type
+            if (!abstractRetType.equals(realRetType)) {
+                mv.visitTypeInsn(CHECKCAST, realRetType.getInternalName());
+            }
+            mv.visitInsn(getReturnOpcode(realRetType));
 
             for (int i = 0; i < argTypes.length; i++) {
                 final Type t = argTypes[i];

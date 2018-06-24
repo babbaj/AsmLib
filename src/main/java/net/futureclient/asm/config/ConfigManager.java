@@ -1,6 +1,5 @@
 package net.futureclient.asm.config;
 
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -13,7 +12,8 @@ public class ConfigManager {
 
     public static final ConfigManager INSTANCE = new ConfigManager();
 
-    private ConfigManager() {}
+    private ConfigManager() {
+    }
 
     public void addConfiguration(Config config) {
         this.configs.add(config);
