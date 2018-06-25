@@ -1,11 +1,10 @@
 package net.futureclient.asm.transformer;
 
-import net.futureclient.asm.AsmLib;
+import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.internal.LambdaInfo;
 import net.futureclient.asm.internal.LambdaManager;
 import net.futureclient.asm.internal.TransformerUtil;
-import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
@@ -36,7 +35,7 @@ public class AsmMethod {
     private static final Map<String, Integer> carrierClassIndex = new HashMap<>();
 
     public AsmMethod(MethodNode methodIn, ClassNode parentClass) {
-        this(methodIn, parentClass, AsmLib.getConfigManager().getDefaultConfig());
+        this(methodIn, parentClass, ConfigManager.INSTANCE.getDefaultConfig());
     }
 
     public AsmMethod(MethodNode methodIn, ClassNode parentClass, Config configIn) {

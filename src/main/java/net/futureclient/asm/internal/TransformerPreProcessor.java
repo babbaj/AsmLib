@@ -1,7 +1,7 @@
 package net.futureclient.asm.internal;
 
 import com.google.common.collect.Streams;
-import net.futureclient.asm.AsmLib;
+import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.annotation.Transformer;
@@ -50,7 +50,7 @@ public final class TransformerPreProcessor implements IClassTransformer {
     }
 
     private boolean configContainsClass(String className) {
-        return AsmLib.getConfigManager()
+        return ConfigManager.INSTANCE
                 .getConfigs().stream()
                 .map(Config::getTransformerClassNames)
                 .flatMap(Collection::stream)

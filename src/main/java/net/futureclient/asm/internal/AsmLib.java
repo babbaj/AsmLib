@@ -1,4 +1,4 @@
-package net.futureclient.asm;
+package net.futureclient.asm.internal;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.config.ConfigManager;
-import net.futureclient.asm.internal.TransformerPreProcessor;
 import net.futureclient.asm.transformer.util.TransformerGenerator;
 import net.futureclient.asm.transformer.wrapper.LaunchWrapperTransformer;
 import net.minecraft.launchwrapper.Launch;
@@ -17,13 +16,22 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Objects;
 
-public final class AsmLib {
+/**
+ * This class and all other AsmLib classes should be loaded by the LaunchClassLoader except for
+ * {@code AsmLibApi} which should be able to work in any class loader
+ */
+final class AsmLib {
     private AsmLib() {}
 
     public static final Logger LOGGER = LogManager.getLogger("AsmLib");
     private static final String VERSION = "0.1";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
+    static {
+        if (AsmLib.class.getClassLoader() != Launch.classLoader) {
+            throw new IllegalStateException("AsmLib must be loaded by the LaunchClassLoader");
+        }
+    }
 
     public static void addConfig(final String configResource) {
         final InputStream is = AsmLib.class.getClassLoader().getResourceAsStream(configResource);
@@ -35,7 +43,7 @@ public final class AsmLib {
     }
 
     public static void addConfig(final Config config) {
-        getConfigManager().addConfiguration(config);
+        ConfigManager.INSTANCE.addConfiguration(config);
         applyTransformerPatches(config); // TODO: do this lazily
     }
 
@@ -65,7 +73,4 @@ public final class AsmLib {
         }
     }
 
-    public static ConfigManager getConfigManager() {
-        return ConfigManager.INSTANCE;
-    }
 }

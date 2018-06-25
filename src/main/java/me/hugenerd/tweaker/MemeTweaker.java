@@ -1,6 +1,6 @@
 package me.hugenerd.tweaker;
 
-import net.futureclient.asm.AsmLib;
+import net.futureclient.asm.AsmLibApi;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
@@ -15,9 +15,8 @@ public final class MemeTweaker implements ITweaker {
 
     @Override
     public void injectIntoClassLoader(LaunchClassLoader classLoader) {
-        classLoader.addClassLoaderExclusion("org.objectweb.asm.");
         //AsmLib.addConfig(new MemeConfig());
-        AsmLib.addConfig("test_config.json");
+        AsmLibApi.addConfig("test_config.json");
     }
 
     @Override

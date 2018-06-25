@@ -1,6 +1,5 @@
 package net.futureclient.asm.transformer.util;
 
-import net.futureclient.asm.AsmLib;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.transformer.AsmMethod;
@@ -8,7 +7,6 @@ import net.futureclient.asm.transformer.ClassTransformer;
 import net.futureclient.asm.transformer.MethodTransformer;
 import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.annotation.Transformer;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -87,7 +85,7 @@ public final class TransformerGenerator {
                 try {
                     // TODO refactor this maybe
                     if (params[0] == AsmMethod.class)
-                        method.invoke(instance, new AsmMethod(methodNode, clazz, config.orElse(AsmLib.getConfigManager().getDefaultConfig())));
+                        method.invoke(instance, new AsmMethod(methodNode, clazz, config.orElse(ConfigManager.INSTANCE.getDefaultConfig())));
                      else if (params[0] == MethodNode.class)
                         method.invoke(instance, methodNode);
                      else

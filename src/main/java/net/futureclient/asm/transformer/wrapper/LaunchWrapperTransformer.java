@@ -1,7 +1,7 @@
 package net.futureclient.asm.transformer.wrapper;
 
-import net.futureclient.asm.AsmLib;
 import net.futureclient.asm.config.Config;
+import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.transformer.ClassTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.apache.logging.log4j.Level;
@@ -66,7 +66,7 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
     }
 
     private List<ClassTransformer> getTransformers(String name) {
-        return AsmLib.getConfigManager()
+        return ConfigManager.INSTANCE
                 .getConfigs().stream()
                 .map(Config::getClassTransformers)
                 .flatMap(List::stream)
