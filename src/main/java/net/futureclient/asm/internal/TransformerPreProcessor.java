@@ -3,6 +3,7 @@ package net.futureclient.asm.internal;
 import com.google.common.collect.Streams;
 import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.config.Config;
+import net.futureclient.asm.obfuscation.RuntimeState;
 import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.annotation.Transformer;
 import net.futureclient.asm.transformer.util.AnnotationInfo;
@@ -64,7 +65,7 @@ public final class TransformerPreProcessor implements IClassTransformer {
     }
 
     // TODO: make sure we have java lambdas
-    private void processLambdas(ClassNode clazz, MethodNode method) {
+    private void processLambdas(MethodNode method) {
         Streams.stream(method.instructions.iterator())
                 .filter(InvokeDynamicInsnNode.class::isInstance)
                 .map(InvokeDynamicInsnNode.class::cast)
@@ -94,7 +95,7 @@ public final class TransformerPreProcessor implements IClassTransformer {
     }
 
     private void processClass(ClassNode clazz) {
-        clazz.methods.forEach(node -> processLambdas(clazz, node));
+        clazz.methods.forEach(node -> processLambdas(node));
 
         // TODO: only apply to lambda methods
         clazz.methods.stream()
@@ -104,23 +105,26 @@ public final class TransformerPreProcessor implements IClassTransformer {
                     method.access |= ACC_PUBLIC;
                 });
 
+        AnnotationNode annotationNode = clazz.visibleAnnotations.stream()
+                .filter(node -> node.desc.equals(Type.getDescriptor(Transformer.class)))
+                .findFirst()
+                .get();
+        final boolean remap = Optional.ofNullable(AnnotationInfo.fromAsm(annotationNode)
+                .<Boolean>getValue("remap"))
+                .orElse(true);
+        processTransformer(annotationNode, remap);
+
         clazz.methods.stream()
                 .map(node -> node.visibleAnnotations)
                 .filter(Objects::nonNull)
                 .flatMap(List::stream)
                 .filter(node -> node.desc.equals(Type.getDescriptor(Inject.class)))
-                .findFirst()
-                .ifPresent(this::processInject);
-
-        clazz.visibleAnnotations.stream()
-                .filter(node -> node.desc.equals(Type.getDescriptor(Transformer.class)))
-                .findFirst()
-                .ifPresent(this::processTransformer);
+                .forEach(node -> processInject(node, remap));
     }
 
     // process @Transformer annotation
     @SuppressWarnings("unchecked")
-    private void processTransformer(AnnotationNode node) {
+    private void processTransformer(AnnotationNode node, final boolean remap) {
         AnnotationInfo info = AnnotationInfo.fromAsm(node);
         if (info.getValue("targets") == null) {
             node.values.add(0, "targets");
@@ -130,8 +134,16 @@ public final class TransformerPreProcessor implements IClassTransformer {
         if (node.values.contains("value")) {
             targets.addAll(info.<List<Type>>getValue("value").stream()
                     .map(Type::getClassName)
+                    .map(clazz ->
+                        remap ? Optional.ofNullable(RuntimeState.getMapper().getClassName(clazz))
+                                .orElseGet(() -> {
+                                    System.err.println("Failed to find obfuscation mapping for: " + clazz);
+                                    return clazz;
+                                })
+                                : clazz
+                    ) // remap
                     .collect(Collectors.toList()));
-            int i = node.values.indexOf("value");
+            final int i = node.values.indexOf("value");
             node.values.remove(i + 1);
             node.values.remove(i);
         }
@@ -139,7 +151,8 @@ public final class TransformerPreProcessor implements IClassTransformer {
     }
 
     // process @Inject annotation
-    private void processInject(AnnotationNode node) {
+    // TODO: remap
+    private void processInject(AnnotationNode node, final boolean remap) {
         AnnotationInfo info = AnnotationInfo.fromAsm(node);
         if (info.getValue("target") == null) {
             String name = info.getValue("name");

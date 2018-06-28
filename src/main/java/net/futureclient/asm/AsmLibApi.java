@@ -27,6 +27,7 @@ public final class AsmLibApi {
             mAddConfig_Config.setAccessible(true);
 
             mInit = asmlib.getDeclaredMethod("init");
+            mInit.setAccessible(true);
         } catch (ClassNotFoundException | NoSuchMethodException e) {
             throw new Error(e);
         }
@@ -38,6 +39,14 @@ public final class AsmLibApi {
             return Class.forName(name, true, Launch.classLoader);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static void init() {
+        try {
+            mInit.invoke(null);
+        } catch (ReflectiveOperationException e) {
+            throw new Error(e);
         }
     }
 

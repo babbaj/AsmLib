@@ -1,10 +1,10 @@
 package net.futureclient.asm.tweaker;
 
+import net.futureclient.asm.AsmLibApi;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -17,16 +17,7 @@ public class AsmLibTweaker implements ITweaker {
 
     @Override
     public void injectIntoClassLoader(LaunchClassLoader classLoader) {
-        classLoader.addTransformerExclusion("net.futureclient.asm.");
-
-        try {
-            Class<?> asmlib = Class.forName("net.futureclient.asm.internal.AsmLib", true, classLoader);
-            Method init = asmlib.getDeclaredMethod("init");
-            init.setAccessible(true);
-            init.invoke(null);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
+        AsmLibApi.init();
     }
 
     @Override

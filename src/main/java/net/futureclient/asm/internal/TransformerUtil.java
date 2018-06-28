@@ -36,7 +36,7 @@ public final class TransformerUtil {
             mv.visitEnd();
         }
 
-        {
+        { // the reference to the function
             FieldVisitor fv = cw.visitField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, "data", Type.getDescriptor(type), null, null);
             fv.visitEnd();
         }
@@ -53,6 +53,7 @@ public final class TransformerUtil {
             mv.visitLineNumber(11, l0);
 
             mv.visitFieldInsn(GETSTATIC, className, "data", Type.getDescriptor(type));
+            // push arguments to stack
             for (int i = 0; i < argTypes.length; i++) {
                 final Type t = argTypes[i];
                 mv.visitVarInsn(getVariableOpcode(t), i);

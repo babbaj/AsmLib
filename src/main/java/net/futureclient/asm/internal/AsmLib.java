@@ -18,7 +18,7 @@ import java.util.Objects;
 
 /**
  * This class and all other AsmLib classes should be loaded by the LaunchClassLoader except for
- * {@code AsmLibApi} which should be able to work in any class loader
+ * {@link net.futureclient.asm.AsmLibApi} which should be able to work in any class loader
  */
 final class AsmLib {
     private AsmLib() {}
@@ -26,6 +26,7 @@ final class AsmLib {
     public static final Logger LOGGER = LogManager.getLogger("AsmLib");
     private static final String VERSION = "0.1";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static boolean initialized;
 
     static {
         if (AsmLib.class.getClassLoader() != Launch.classLoader) {
@@ -47,11 +48,15 @@ final class AsmLib {
         applyTransformerPatches(config); // TODO: do this lazily
     }
 
-    static void init() {
-        LOGGER.info("AsmLib v{}", VERSION);
+    public static void init() {
+        if (!initialized) {
+            LOGGER.info("AsmLib v{}", VERSION);
+            Launch.classLoader.addTransformerExclusion("net.futureclient.asm");
 
-        Launch.classLoader.registerTransformer(TransformerPreProcessor.class.getName());
-        Launch.classLoader.registerTransformer(LaunchWrapperTransformer.class.getName());
+            Launch.classLoader.registerTransformer(TransformerPreProcessor.class.getName());
+            Launch.classLoader.registerTransformer(LaunchWrapperTransformer.class.getName());
+        }
+        initialized = true;
     }
 
     // TODO: maybe do this lazily
