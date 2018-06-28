@@ -8,6 +8,7 @@ import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.annotation.Transformer;
 import net.futureclient.asm.transformer.util.AnnotationInfo;
 import net.minecraft.launchwrapper.IClassTransformer;
+import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Handle;
@@ -119,7 +120,15 @@ public final class TransformerPreProcessor implements IClassTransformer {
                 .filter(Objects::nonNull)
                 .flatMap(List::stream)
                 .filter(node -> node.desc.equals(Type.getDescriptor(Inject.class)))
-                .forEach(node -> processInject(node, remap));
+                .forEach(node -> processInject(node, clazz, remap));
+    }
+
+    private String remapClass(String className) {
+        return Optional.ofNullable(RuntimeState.getMapper().getClassName(className))
+                .orElseGet(() -> {
+                    System.err.println("Failed to find obfuscation mapping for: " + className);
+                    return className;
+                });
     }
 
     // process @Transformer annotation
@@ -134,14 +143,7 @@ public final class TransformerPreProcessor implements IClassTransformer {
         if (node.values.contains("value")) {
             targets.addAll(info.<List<Type>>getValue("value").stream()
                     .map(Type::getClassName)
-                    .map(clazz ->
-                        remap ? Optional.ofNullable(RuntimeState.getMapper().getClassName(clazz))
-                                .orElseGet(() -> {
-                                    System.err.println("Failed to find obfuscation mapping for: " + clazz);
-                                    return clazz;
-                                })
-                                : clazz
-                    ) // remap
+                    .map(clazz -> remap ? remapClass(clazz) : clazz) // remap
                     .collect(Collectors.toList()));
             final int i = node.values.indexOf("value");
             node.values.remove(i + 1);
@@ -151,18 +153,26 @@ public final class TransformerPreProcessor implements IClassTransformer {
     }
 
     // process @Inject annotation
-    // TODO: remap
-    private void processInject(AnnotationNode node, final boolean remap) {
+    private void processInject(AnnotationNode node, ClassNode parent, final boolean remap) {
         AnnotationInfo info = AnnotationInfo.fromAsm(node);
         if (info.getValue("target") == null) {
-            String name = info.getValue("name");
-            if (name == null) throw new IllegalArgumentException("Failed to supply method name");
-            String ret = Optional.ofNullable(info.<Type>getValue("ret")).orElse(Type.VOID_TYPE).getDescriptor();
-            String args = Optional.ofNullable(info.<List<Type>>getValue("args"))
-                    .map(list -> list.stream().map(Type::getDescriptor).collect(Collectors.joining()))
+            final String name = info.getValue("name");
+            if (name == null)
+                throw new IllegalArgumentException("Failed to supply method name");
+            final String ret = Optional.ofNullable(info.<Type>getValue("ret")).orElse(Type.VOID_TYPE).getDescriptor();
+            final String args = Optional.ofNullable(info.<List<Type>>getValue("args"))
+                    .map(list -> list.stream()
+                            .map(Type::getDescriptor)
+                            .map(clazz -> remap ? remapClass(clazz) : clazz)
+                            .collect(Collectors.joining()))
                     .orElse("");
 
-            final String fullDesc = String.format("%s(%s)%s", name, args, ret);
+
+            final String fullDesc = String.format("%s(%s)%s",
+                    remap ? RuntimeState.getMapper().getMethodName(parent.name, name, '(' + args + ')' + ret)
+                            : name,
+                    args,
+                    remap ? remapClass(ret) : ret);
             int i = node.values.indexOf("target");
             if (i == -1) {
                 node.values.add(0, "target");

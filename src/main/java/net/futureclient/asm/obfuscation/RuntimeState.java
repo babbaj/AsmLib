@@ -5,7 +5,7 @@ public class RuntimeState {
     private static IMapper remapper = UnobfuscatedRemapper.getInstance();
 
     public static State getObfuscationState() {
-        return State.OBFUSCATED;
+        return State.NOTCH;
     }
 
     public static IMapper getMapper() {

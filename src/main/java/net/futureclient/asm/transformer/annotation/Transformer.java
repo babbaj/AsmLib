@@ -21,7 +21,6 @@ public @interface Transformer {
     Class<?>[] value() default {};
 
     // Should obfuscation mappings be applied to this transformer.
-    // TODO: implement
     boolean remap() default true;
 
     // Shut everything down if this transformer fails

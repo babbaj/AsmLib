@@ -1,7 +1,7 @@
 package net.futureclient.asm.obfuscation;
 
 public enum State {
-    NORMAL,
+    DEV, // unobfuscated
     SRG,
-    OBFUSCATED
+    NOTCH // production
 }
