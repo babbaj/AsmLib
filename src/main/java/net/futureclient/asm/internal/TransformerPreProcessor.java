@@ -106,54 +106,72 @@ public final class TransformerPreProcessor implements IClassTransformer {
                     method.access |= ACC_PUBLIC;
                 });
 
-        AnnotationNode annotationNode = clazz.visibleAnnotations.stream()
+        final AnnotationNode transformerNode = clazz.visibleAnnotations.stream()
                 .filter(node -> node.desc.equals(Type.getDescriptor(Transformer.class)))
                 .findFirst()
                 .get();
-        final boolean remap = Optional.ofNullable(AnnotationInfo.fromAsm(annotationNode)
+
+        final boolean remap = Optional.ofNullable(AnnotationInfo.fromAsm(transformerNode)
                 .<Boolean>getValue("remap"))
                 .orElse(true);
-        processTransformer(annotationNode, remap);
+        processTransformer(transformerNode, remap);
+
+        String targetClass = AnnotationInfo.fromAsm(transformerNode).getValue("target");
 
         clazz.methods.stream()
                 .map(node -> node.visibleAnnotations)
                 .filter(Objects::nonNull)
                 .flatMap(List::stream)
                 .filter(node -> node.desc.equals(Type.getDescriptor(Inject.class)))
-                .forEach(node -> processInject(node, clazz, remap));
+                .forEach(node -> processInject(node, targetClass, remap));
     }
 
     private String remapClass(String className) {
-        return Optional.ofNullable(RuntimeState.getMapper().getClassName(className))
+        return Optional.ofNullable(RuntimeState.getMapper().getClassName(className.replace(".", "/")))
+                //.map(str -> str.replace("/", "."))
+                .map(str -> {System.out.println(str); return str;})
                 .orElseGet(() -> {
                     System.err.println("Failed to find obfuscation mapping for: " + className);
                     return className;
                 });
+    }
+    // may be an array
+    private String remapType(String type) {
+        Type t = Type.getObjectType(type);
+        final int dims = t.getDimensions();
+        String elementType = t.getElementType().getInternalName();
+        final String remapped = elementType.length() > 1 ? 'L' + remapClass(elementType) + ";"
+                                                         : elementType; // remap if not primitive
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < dims; i++)
+            sb.append("[");
+        sb.append(remapped);
+
+        return sb.toString();
     }
 
     // process @Transformer annotation
     @SuppressWarnings("unchecked")
     private void processTransformer(AnnotationNode node, final boolean remap) {
         AnnotationInfo info = AnnotationInfo.fromAsm(node);
-        if (info.getValue("targets") == null) {
-            node.values.add(0, "targets");
-            node.values.add(1, new ArrayList<String>());
-        }
-        List<String> targets = (List<String>)node.values.get(node.values.indexOf("targets") + 1);
-        if (node.values.contains("value")) {
-            targets.addAll(info.<List<Type>>getValue("value").stream()
+        if (info.getValue("target") == null) {
+            node.values.add(0, "target");
+            String newTarget = Optional.of(info.<Type>getValue("value"))
                     .map(Type::getClassName)
-                    .map(clazz -> remap ? remapClass(clazz) : clazz) // remap
-                    .collect(Collectors.toList()));
-            final int i = node.values.indexOf("value");
+                    .map(clazz -> remap ? remapClass(clazz).replace("/", ".")
+                                        : clazz) // remap
+                    .get();
+            node.values.add(1, newTarget);
+        }
+        final int i = node.values.indexOf("value");
+        if (i != -1) {
             node.values.remove(i + 1);
             node.values.remove(i);
         }
-
     }
 
     // process @Inject annotation
-    private void processInject(AnnotationNode node, ClassNode parent, final boolean remap) {
+    private void processInject(final AnnotationNode node, final String targetClass, final boolean remap) {
         AnnotationInfo info = AnnotationInfo.fromAsm(node);
         if (info.getValue("target") == null) {
             final String name = info.getValue("name");
@@ -162,14 +180,14 @@ public final class TransformerPreProcessor implements IClassTransformer {
             final String ret = Optional.ofNullable(info.<Type>getValue("ret")).orElse(Type.VOID_TYPE).getDescriptor();
             final String args = Optional.ofNullable(info.<List<Type>>getValue("args"))
                     .map(list -> list.stream()
-                            .map(Type::getDescriptor)
-                            .map(clazz -> remap ? remapClass(clazz) : clazz)
+                            .map(Type::getInternalName)
+                            .map(clazz -> remap ? remapType(clazz) : clazz)
                             .collect(Collectors.joining()))
                     .orElse("");
 
 
             final String fullDesc = String.format("%s(%s)%s",
-                    remap ? RuntimeState.getMapper().getMethodName(parent.name, name, '(' + args + ')' + ret)
+                    remap ? RuntimeState.getMapper().getMethodName(targetClass.replace(".", "/"), name, '(' + args + ')' + ret)
                             : name,
                     args,
                     remap ? remapClass(ret) : ret);

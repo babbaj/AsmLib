@@ -12,7 +12,7 @@ import static org.objectweb.asm.Opcodes.*;
 /**
  * Created by Babbaj on 5/21/2018.
  */
-@Transformer(value = {Main.class}, remap = true)
+@Transformer(Main.class)
 public class LambdaTestTransformer {
 
     @Inject(name = "main", args = {String[].class})

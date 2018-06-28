@@ -15,8 +15,6 @@ import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,7 +50,7 @@ public final class TransformerGenerator {
         Transformer info = clazz.getAnnotation(Transformer.class);
         try {
             Object instance = clazz.newInstance();
-            String targetClass = info.targets()[0]; // TODO: allow for multiple target classes
+            String targetClass = info.target();
             ClassTransformer transformer = new ClassTransformer(targetClass) {};
             Stream.of(clazz.getDeclaredMethods())
                     .filter(m -> !isConstructor(m))

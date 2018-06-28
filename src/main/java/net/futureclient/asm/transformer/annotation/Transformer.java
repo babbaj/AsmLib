@@ -12,13 +12,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Transformer {
 
-    String[] targets() default {};
+    String target() default "";
 
     /**
      * The contents of this will be moved to {@code targets} by the PreProcessor to prevent classes from being loaded.
      * This is expected to always be empty.
      **/
-    Class<?>[] value() default {};
+    Class<?> value() default void.class;
 
     // Should obfuscation mappings be applied to this transformer.
     boolean remap() default true;
