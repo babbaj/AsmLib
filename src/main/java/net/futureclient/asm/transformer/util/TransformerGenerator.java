@@ -1,5 +1,6 @@
 package net.futureclient.asm.transformer.util;
 
+import com.google.common.collect.ImmutableList;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.transformer.AsmMethod;
@@ -32,8 +33,12 @@ public final class TransformerGenerator {
     // group 2 = args/return type
     private static final Pattern DESCRIPTOR_PATTERN = Pattern.compile("(.+)(\\(.*\\).+)");
 
-    private static final Collection<Class<? extends Annotation>> METHOD_ANNOTATION_CLASSES = Arrays.asList(
+    private static final ImmutableList<Class<? extends Annotation>> METHOD_ANNOTATION_CLASSES = ImmutableList.of(
             Inject.class
+    );
+    private static final ImmutableList<Class<?>[]> INJECT_PAREMETER_TYPES = ImmutableList.of(
+            new Class<?>[]{MethodNode.class},
+            new Class<?>[]{AsmMethod.class}
     );
 
 
@@ -77,19 +82,21 @@ public final class TransformerGenerator {
         String name = parsed[0];
         String desc = parsed[1];
 
-        final Class<?>[] params = method.getParameterTypes(); // TODO: check that the @Inject method as valid parameters
+        final Class<?>[] params = method.getParameterTypes(); // TODO: check that the @Inject method has valid parameters
+        if (INJECT_PAREMETER_TYPES.stream().noneMatch(legalTypes -> Arrays.deepEquals(legalTypes, params))) {
+            throw new IllegalArgumentException("Invalid arguments for @Inject: expected MethodNode or AsmMethod");
+        }
 
         return new MethodTransformer(name, desc) { // maybe don't use anonymous class?
             @Override
             public void inject(MethodNode methodNode, ClassNode clazz) {
                 try {
-                    // TODO refactor this maybe
                     if (params[0] == AsmMethod.class)
                         method.invoke(instance, new AsmMethod(methodNode, clazz, config.orElse(ConfigManager.INSTANCE.getDefaultConfig())));
-                     else if (params[0] == MethodNode.class)
+                    else if (params[0] == MethodNode.class)
                         method.invoke(instance, methodNode);
-                     else
-                        throw new IllegalArgumentException("Invalid arguments for @Inject: expected MethodNode or AsmMethod");
+                    else
+                        throw new Error(); // shouldn't be possible
 
                 } catch (Exception e) {
                     throw new RuntimeException(e);
