@@ -80,7 +80,7 @@ public final class TransformerGenerator {
         String name = parsed[0];
         String desc = parsed[1];
 
-        final Class<?>[] params = method.getParameterTypes(); // TODO: check that the @Inject method has valid parameters
+        final Class<?>[] params = method.getParameterTypes();
         if (INJECT_PAREMETER_TYPES.stream().noneMatch(legalTypes -> Arrays.deepEquals(legalTypes, params))) {
             throw new IllegalArgumentException("Invalid arguments for @Inject: expected MethodNode or AsmMethod");
         }

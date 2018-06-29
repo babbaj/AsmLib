@@ -35,20 +35,20 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
             classTransformers.forEach(transformer -> {
                 try {
                     transformer.transform(cn);
-                    LOGGER.info("Successfully transformed class {}", transformer.getClassName()); // TODO; success message for each method
-                } catch (Throwable throwable) {
+                    LOGGER.info("Successfully transformed class {}", transformer.getTargetClassName()); // TODO; success message for each method
+                } catch (Exception e) {
                     LOGGER.log(Level.ERROR, "Error transforming \"{}\" with transformer \"{}\".", transformedName, transformer.getClass().getName());
 
                     if (transformer.isRequired())
-                        throw throwable; // crash game
+                        throw new Error(e); // crash game
                     else
-                        throwable.printStackTrace();
+                        e.printStackTrace();
                 }
             });
 
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
             cn.accept(cw);
-            log("MainOutput.class", cw.toByteArray());
+            //log("MainOutput.class", cw.toByteArray());
             return cw.toByteArray();
         }
 
@@ -68,10 +68,10 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
     private List<ClassTransformer> getTransformers(String name) {
         return ConfigManager.INSTANCE
                 .getConfigs().stream()
+                .sorted(Config::compareTo)
                 .map(Config::getClassTransformers)
                 .flatMap(List::stream)
-                .filter(classTransformer -> classTransformer.getClassName().equals(name))
-                .sorted(ClassTransformer::compareTo)
+                .filter(classTransformer -> classTransformer.getTargetClassName().equals(name))
                 .collect(Collectors.toList());
     }
 
