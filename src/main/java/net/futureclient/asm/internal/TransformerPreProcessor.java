@@ -154,17 +154,27 @@ public final class TransformerPreProcessor implements IClassTransformer {
             final String ret = Optional.ofNullable(info.<Type>getValue("ret")).orElse(Type.VOID_TYPE).getDescriptor();
             final String args = Optional.ofNullable(info.<List<Type>>getValue("args"))
                     .map(list -> list.stream()
-                            .map(this::getInternalName)
+                            .map(Type::getDescriptor)
                             .collect(Collectors.joining()))
                     .orElse("");
 
             final String fullDesc = String.format("%s(%s)%s", name, args, ret);
+            System.out.println("FullDesc: " + fullDesc);
             int i = node.values.indexOf("target");
             if (i == -1) {
                 node.values.add(0, "target");
                 node.values.add(1, fullDesc);
             } else {
                 node.values.set(i + 1, fullDesc);
+            }
+        }
+        // target value is set, remove the old annotation values because theyre unnecessary and cause problems
+        String[] oldValueNames = {"name", "args", "ret"};
+        for (String valueName : oldValueNames) {
+            final int index = node.values.indexOf(valueName);
+            if (index != -1) {
+                node.values.remove(index + 1);
+                node.values.remove(index);
             }
         }
     }

@@ -6,7 +6,7 @@ import org.objectweb.asm.tree.MethodNode;
 public abstract class MethodTransformer {
 
     private final String methodName;
-    private final String methodDesc; // TODO: auto generate
+    private final String methodDesc;
 
     public MethodTransformer(final String methodName, final String methodDescriptor) {
         this.methodName = methodName;

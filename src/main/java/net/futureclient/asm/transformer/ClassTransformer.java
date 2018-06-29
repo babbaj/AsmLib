@@ -47,7 +47,7 @@ public abstract class ClassTransformer {
     private boolean areMethodsEqual(MethodTransformer transformer, MethodNode methodNode) {
         if (remap) {
                     // check name
-            return Objects.equals(ObfUtils.remapMethodName(targetClassName, transformer.getMethodName(), transformer.getMethodDesc()), methodNode.name)
+            return Objects.equals(ObfUtils.remapMethodName(targetClassName.replace(".", "/"), transformer.getMethodName(), transformer.getMethodDesc()), methodNode.name)
                     // check descriptor
                 && Objects.equals(ObfUtils.remapMethodDesc(transformer.getMethodDesc()), methodNode.desc);
         } else {
