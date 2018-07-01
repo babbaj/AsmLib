@@ -13,7 +13,7 @@ public final class ObfUtils {
     public static String remapMethodName(String parentClassName, String methodName, String methodDescriptor) {
         return Optional.ofNullable(RuntimeState.getMapper().getMethodName(parentClassName, methodName, methodDescriptor))
                 .orElseGet(() -> {
-                    System.err.println("Failed to find obfuscation mapping for method: " + methodName + "(" + methodDescriptor + ")");
+                    System.err.println("Failed to find obfuscation mapping for method: " + methodName + methodDescriptor);
                     return methodName;
                 });
     }
