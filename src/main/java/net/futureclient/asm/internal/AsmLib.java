@@ -20,7 +20,8 @@ import java.util.Objects;
  * This class and all other AsmLib classes should be loaded by the LaunchClassLoader except for
  * {@link net.futureclient.asm.AsmLibApi} which should be able to work in any class loader
  */
-final class AsmLib {
+// TODO: maybe make this package-private
+public final class AsmLib {
     private AsmLib() {}
 
     public static final Logger LOGGER = LogManager.getLogger("AsmLib");

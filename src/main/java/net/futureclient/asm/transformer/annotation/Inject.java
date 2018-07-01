@@ -19,6 +19,11 @@ public @interface Inject {
      */
     String target() default "";
 
+    /**
+     * @return description of this hook that describes its purpose
+     */
+    String description() default "";
+
 
     /**
      * These parameters will be converted to a String representation and will be returned by {@code target}.

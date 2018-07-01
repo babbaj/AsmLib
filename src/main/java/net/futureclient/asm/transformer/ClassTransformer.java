@@ -1,13 +1,11 @@
 package net.futureclient.asm.transformer;
 
+import net.futureclient.asm.internal.AsmLib;
 import net.futureclient.asm.transformer.util.ObfUtils;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public abstract class ClassTransformer {
 
@@ -38,7 +36,19 @@ public abstract class ClassTransformer {
                 classNode.methods.stream()
                         .filter(node -> areMethodsEqual(methodTransformer, node))
                         .findFirst()
-                        .ifPresent(method -> methodTransformer.inject(method, classNode)));
+                        .ifPresent(method -> {
+                            try {
+                                methodTransformer.inject(method, classNode);
+                                AsmLib.LOGGER.info("Transformed method: {}::{}{}{}",
+                                        targetClassName,
+                                        methodTransformer.getMethodName(),
+                                        methodTransformer.getMethodDesc(),
+                                        Optional.ofNullable(methodTransformer.getDescription())
+                                                .map(str -> " - " + "\"" + str + "\"").orElse(""));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }));
 
         this.inject(classNode);
     }

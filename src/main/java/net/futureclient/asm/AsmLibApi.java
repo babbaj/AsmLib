@@ -7,7 +7,9 @@ import net.minecraft.launchwrapper.Launch;
 import java.lang.reflect.Method;
 
 /**
- * This class acts as a classloader independent api to interact with AsmLib
+ * ClassLoader safe api for interacting with AsmLib.
+ * Use this class if calling from a class loaded by system classloader like a tweaker,
+ * otherwise if loaded by the LaunchClassLoader like with a forge coremod it is safe to directly call {@link net.futureclient.asm.internal.AsmLib}
  */
 public final class AsmLibApi {
     private AsmLibApi() {};

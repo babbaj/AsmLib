@@ -77,15 +77,17 @@ public final class TransformerGenerator {
     public static MethodTransformer createMethodTransformer(Method method, Object instance, Optional<Config> config) {
         Inject info = method.getAnnotation(Inject.class);
         final String[] parsed = parseTarget(info.target());
-        String name = parsed[0];
-        String desc = parsed[1];
+        final String name = parsed[0];
+        final String desc = parsed[1];
+
+        final String description = !info.description().isEmpty() ? info.description() : null;
 
         final Class<?>[] params = method.getParameterTypes();
         if (INJECT_PAREMETER_TYPES.stream().noneMatch(legalTypes -> Arrays.deepEquals(legalTypes, params))) {
             throw new IllegalArgumentException("Invalid arguments for @Inject: expected MethodNode or AsmMethod");
         }
 
-        return new MethodTransformer(name, desc) { // maybe don't use anonymous class?
+        return new MethodTransformer(name, desc, description) { // maybe don't use anonymous class?
             @Override
             public void inject(MethodNode methodNode, ClassNode clazz) {
                 try {

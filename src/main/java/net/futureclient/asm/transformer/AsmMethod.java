@@ -3,7 +3,6 @@ package net.futureclient.asm.transformer;
 import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.internal.LambdaInfo;
-import net.futureclient.asm.internal.LambdaManager;
 import net.futureclient.asm.internal.TransformerUtil;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -63,7 +62,7 @@ public class AsmMethod {
     }
 
     public <T> void invoke(T instance) {
-        final LambdaInfo func = LambdaManager.lambdas.get(instance);
+        final LambdaInfo func = LambdaInfo.lambdas.get(instance);
         if (func != null && Type.getArgumentTypes(func.lambdaDesc).length == 0) {
             final int opcode = opcodeFromTag(func.targetMethod.getTag());
             this.method.instructions.insertBefore(cursor,

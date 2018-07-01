@@ -89,7 +89,7 @@ public final class TransformerPreProcessor implements IClassTransformer {
         list.add(new LdcInsnNode(realType.getInternalName()));
         // InvokeDynamicInsnNode desc
         list.add(new LdcInsnNode(node.desc));
-        list.add(new MethodInsnNode(INVOKESTATIC, Type.getInternalName(LambdaManager.class), "addLambda",
+        list.add(new MethodInsnNode(INVOKESTATIC, Type.getInternalName(LambdaInfo.class), "addLambda",
                 "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V"));
 
         method.instructions.insert(node, list);
@@ -159,7 +159,6 @@ public final class TransformerPreProcessor implements IClassTransformer {
                     .orElse("");
 
             final String fullDesc = String.format("%s(%s)%s", name, args, ret);
-            System.out.println("FullDesc: " + fullDesc);
             int i = node.values.indexOf("target");
             if (i == -1) {
                 node.values.add(0, "target");
