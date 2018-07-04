@@ -25,7 +25,7 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-         List<ClassTransformer> classTransformers = this.getTransformers(transformedName);
+         List<ClassTransformer> classTransformers = this.getTransformers(name, transformedName);
 
         if (!classTransformers.isEmpty()) {
             ClassNode cn = new ClassNode();
@@ -65,13 +65,16 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
         }
     }
 
-    private List<ClassTransformer> getTransformers(String name) {
+    private List<ClassTransformer> getTransformers(String name, String transformedName) {
         return ConfigManager.INSTANCE
                 .getConfigs().stream()
                 .sorted(Config::compareTo)
                 .map(Config::getClassTransformers)
                 .flatMap(List::stream)
-                .filter(classTransformer -> classTransformer.getTargetClassName().equals(name))
+                .filter(classTransformer ->
+                        classTransformer.getTargetClassName().equals(name) ||
+                        classTransformer.getTargetClassName().equals(transformedName)
+                )
                 .collect(Collectors.toList());
     }
 

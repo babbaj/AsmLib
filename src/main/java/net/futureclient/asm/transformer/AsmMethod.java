@@ -10,9 +10,7 @@ import org.objectweb.asm.tree.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Stream;
 
 import static org.objectweb.asm.Opcodes.*;
@@ -61,34 +59,6 @@ public class AsmMethod {
         }
     }
 
-    public <T> void invoke(T instance) {
-        final LambdaInfo func = LambdaInfo.lambdas.get(instance);
-        if (func != null && Type.getArgumentTypes(func.lambdaDesc).length == 0) {
-            final int opcode = opcodeFromTag(func.targetMethod.getTag());
-            this.method.instructions.insertBefore(cursor,
-                    new MethodInsnNode(opcode, func.targetMethod.getOwner(), func.targetMethod.getName(), func.targetMethod.getDesc()));
-        } else {
-            assertValidFunc(instance);
-            Method abstractMethod = getMethod(instance);
-            final Class iface = Stream.of(instance.getClass().getInterfaces())
-                    .filter(clazz -> Stream.of(clazz.getDeclaredMethods())
-                            .filter(m -> Modifier.isAbstract(m.getModifiers()))
-                            .count() == 1
-                    )
-                    .findFirst()
-                    .get();
-
-            final Type realMethodDesc = Optional.ofNullable(func)
-                    .map(li -> li.realMethodDesc)
-                    .orElse(Type.getMethodType(Type.getMethodDescriptor(abstractMethod)));
-
-            final String carrierClassName = newCarrierClass(instance, iface, realMethodDesc, abstractMethod);
-
-            this.method.instructions.insertBefore(cursor,
-                    new MethodInsnNode(INVOKESTATIC, carrierClassName, abstractMethod.getName(), realMethodDesc.getDescriptor()));
-        }
-    }
-
     private String newCarrierClass(Object instance, Class iface, Type methodDesc, Method abstractMethod) {
         String className;
         for (int i = carrierClassIndex.get(config.getName()); ; i++) {
@@ -126,6 +96,38 @@ public class AsmMethod {
             throw new IllegalArgumentException("Object implements multiple or non functional interfaces");
     }
 
+    public <T> void invoke(T instance) {
+        final LambdaInfo func = LambdaInfo.lambdas.get(instance);
+        if (func != null && Type.getArgumentTypes(func.lambdaDesc).length == 0) {
+            final int opcode = opcodeFromTag(func.targetMethod.getTag());
+            this.method.instructions.insertBefore(cursor,
+                    new MethodInsnNode(opcode, func.targetMethod.getOwner(), func.targetMethod.getName(), func.targetMethod.getDesc()));
+        } else {
+            assertValidFunc(instance);
+            Method abstractMethod = getMethod(instance);
+            final Class iface = Stream.of(instance.getClass().getInterfaces())
+                    .filter(clazz -> Stream.of(clazz.getDeclaredMethods())
+                            .filter(m -> Modifier.isAbstract(m.getModifiers()))
+                            .count() == 1
+                    )
+                    .findFirst()
+                    .get();
+
+            final Type realMethodDesc = Optional.ofNullable(func)
+                    .map(li -> li.realMethodDesc)
+                    .orElse(Type.getMethodType(Type.getMethodDescriptor(abstractMethod)));
+
+            final String carrierClassName = newCarrierClass(instance, iface, realMethodDesc, abstractMethod);
+
+            this.method.instructions.insertBefore(cursor,
+                    new MethodInsnNode(INVOKESTATIC, carrierClassName, abstractMethod.getName(), realMethodDesc.getDescriptor()));
+        }
+    }
+
+    public void setCursor(AbstractInsnNode location) {
+        this.cursor = location;
+    }
+
     public void visitInsn(AbstractInsnNode node) {
         this.method.instructions.insertBefore(cursor, node);
     }
@@ -147,6 +149,11 @@ public class AsmMethod {
     // function that takes 2 objects as arguments
     public <T, U> void consume_2(BiConsumer<T, U> consumer) {
         invoke(consumer);
+    }
+
+    // function that takes an object and returns an object
+    public <T, R> void apply(Function<T, R> function) {
+        invoke(function);
     }
 
 }
