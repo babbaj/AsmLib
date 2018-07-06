@@ -55,7 +55,7 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
         return basicClass;
     }
 
-    private void log(String fileName, byte[] bytes) {
+    public static void log(String fileName, byte[] bytes) {
         File f = new File(fileName);
         try {
             f.createNewFile();

@@ -116,7 +116,12 @@ public final class TransformerPreProcessor implements IClassTransformer {
                 .filter(Objects::nonNull)
                 .flatMap(List::stream)
                 .filter(node -> node.desc.equals(Type.getDescriptor(Inject.class)))
-                .forEach(node -> processInject(node));
+                .forEach(this::processInject);
+
+        // TODO: create delegate here
+        final Class<? extends TransformerDelegate> wrapperClass =
+                TransformerDelegate.createDelegateClass(clazz.methods.toArray(new MethodNode[0]), Type.getObjectType(clazz.name));
+        TransformerDelegate.DELEGATES.put(clazz.name, wrapperClass);
     }
 
     // works for primitives

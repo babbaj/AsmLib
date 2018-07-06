@@ -21,19 +21,7 @@ public final class TransformerUtil {
         cw.visit(52, ACC_PUBLIC | ACC_SUPER, className, null, "java/lang/Object", null);
 
         {   // basic constructor, nothing special but it's required
-            MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
-            mv.visitCode();
-            Label l0 = new Label();
-            mv.visitLabel(l0);
-            mv.visitLineNumber(6, l0);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
-            mv.visitInsn(RETURN);
-            Label l1 = new Label();
-            mv.visitLabel(l1);
-            mv.visitLocalVariable("this", 'L' + className + ';', null, l0, l1, 0);
-            mv.visitMaxs(1, 1);
-            mv.visitEnd();
+            addConstructor(cw, className, Type.getInternalName(Object.class));
         }
 
         { // the reference to the function
@@ -50,7 +38,6 @@ public final class TransformerUtil {
             mv.visitCode();
             Label l0 = new Label();
             mv.visitLabel(l0);
-            mv.visitLineNumber(11, l0);
 
             mv.visitFieldInsn(GETSTATIC, className, "data", Type.getDescriptor(type));
             // push arguments to stack
@@ -62,7 +49,6 @@ public final class TransformerUtil {
 
             Label l1 = new Label();
             mv.visitLabel(l1);
-            mv.visitLineNumber(12, l1);
 
             // cast if we have the real type
             if (!abstractRetType.equals(realRetType)) {
@@ -94,7 +80,7 @@ public final class TransformerUtil {
         }
     }
 
-    private static int getReturnOpcode(Type returnType) {
+    public static int getReturnOpcode(Type returnType) {
         switch(returnType.getSort()) {
             case Type.VOID:
                 return RETURN;
@@ -118,7 +104,7 @@ public final class TransformerUtil {
         }
     }
 
-    private static int getVariableOpcode(Type type) {
+    public static int getVariableOpcode(Type type) {
         switch (type.getSort()) {
             case Type.BOOLEAN:
             case Type.CHAR:
@@ -153,14 +139,31 @@ public final class TransformerUtil {
         }
     }
 
-    private static Class<?> createClass(byte[] bytes, String name) {
+    public static <T> Class<? extends T> createClass(byte[] bytes, String name) {
         try {
             Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
             defineClass.setAccessible(true);
-            return (Class<?>)defineClass.invoke(Launch.classLoader, name, bytes, 0, bytes.length);
+            return (Class<? extends T>)defineClass.invoke(Launch.classLoader, name, bytes, 0, bytes.length);
         } catch (Exception e) {
             throw new RuntimeException("Oy Vey!!", e);
         }
+    }
+
+    public static void addConstructor(ClassWriter cw, String className, String ownerClass) {
+        MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+        mv.visitCode();
+        Label l0 = new Label();
+        mv.visitLabel(l0);
+
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitMethodInsn(INVOKESPECIAL, ownerClass, "<init>", "()V", false);
+        mv.visitInsn(RETURN);
+        Label l1 = new Label();
+        mv.visitLabel(l1);
+
+        mv.visitLocalVariable("this", 'L' + className + ';', null, l0, l1, 0);
+        mv.visitMaxs(1, 1);
+        mv.visitEnd();
     }
 
 }

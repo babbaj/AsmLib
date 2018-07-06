@@ -41,13 +41,13 @@ public class Config implements Comparable<Config> {
         this.classTransformers.addAll(Arrays.asList(classTransformers));
     }
 
-    @Deprecated
+    /*@Deprecated
     private void addClassTransformers(Class<?>... classes) {
         Stream.of(classes)
                 .map(TransformerGenerator::fromClass)
                 .filter(Objects::nonNull)
                 .forEach(classTransformers::add);
-    }
+    }*/
 
     // transformer preprocessor needs to know about these classes before they are loaded
     protected final void addClassTransformer(String className) {

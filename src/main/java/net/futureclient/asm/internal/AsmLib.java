@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import jdk.internal.org.objectweb.asm.Type;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.transformer.util.TransformerGenerator;
@@ -15,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * This class and all other AsmLib classes should be loaded by the LaunchClassLoader except for
@@ -61,13 +63,28 @@ public final class AsmLib {
     }
 
     // TODO: maybe do this lazily
+    // TODO: make this work without delegate classes
     private static void applyTransformerPatches(final Config config) {
         config.getTransformerClassNames().stream()
                 .map(AsmLib::loadClass)
                 .filter(Objects::nonNull)
-                .map(clazz -> TransformerGenerator.fromClass(clazz, config))
+                .map(AsmLib::createDelegate)
+                .filter(Objects::nonNull)
+                .map(delegate -> TransformerGenerator.fromClass(delegate, config))
                 .filter(Objects::nonNull)
                 .forEach(config.getClassTransformers()::add);
+    }
+    private static TransformerDelegate createDelegate(Class<?> source) {
+        try {
+            Class<? extends TransformerDelegate> delegateClass = TransformerDelegate.DELEGATES.get(Type.getInternalName(source));
+            Stream.of(delegateClass.getDeclaredMethods()).forEach(System.out::println);
+            TransformerDelegate instance = delegateClass.newInstance();
+            instance.setInstance(source.newInstance());
+            return instance;
+        } catch (ReflectiveOperationException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private static Class<?> loadClass(String name) {
