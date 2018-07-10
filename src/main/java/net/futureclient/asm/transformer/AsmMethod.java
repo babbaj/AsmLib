@@ -2,6 +2,7 @@ package net.futureclient.asm.transformer;
 
 import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.config.Config;
+import net.futureclient.asm.internal.CarrierClass;
 import net.futureclient.asm.internal.LambdaInfo;
 import net.futureclient.asm.internal.TransformerUtil;
 import org.objectweb.asm.Type;
@@ -65,8 +66,8 @@ public class AsmMethod {
             className = String.format("#%s$carrier$%d", config.getName(), i);
             try {
                 Class.forName(className);
-            } catch (ClassNotFoundException ignored) {
-                TransformerUtil.createCarrierClass(className, instance, iface, methodDesc, abstractMethod);
+            } catch (ClassNotFoundException ex) {
+                CarrierClass.createCarrierClass(className, instance, iface, methodDesc, abstractMethod);
                 carrierClassIndex.put(config.getName(), i);
                 break;
             }

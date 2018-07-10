@@ -16,7 +16,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 /**
  * This class and all other AsmLib classes should be loaded by the LaunchClassLoader except for
@@ -76,9 +75,8 @@ public final class AsmLib {
     }
     private static TransformerDelegate createDelegate(Class<?> source) {
         try {
-            Class<? extends TransformerDelegate> delegateClass = TransformerDelegate.DELEGATES.get(Type.getInternalName(source));
-            Stream.of(delegateClass.getDeclaredMethods()).forEach(System.out::println);
-            TransformerDelegate instance = delegateClass.newInstance();
+            final Class<? extends TransformerDelegate> delegateClass = TransformerDelegate.DELEGATES.get(Type.getInternalName(source));
+            final TransformerDelegate instance = delegateClass.newInstance();
             instance.setInstance(source.newInstance());
             return instance;
         } catch (ReflectiveOperationException e) {

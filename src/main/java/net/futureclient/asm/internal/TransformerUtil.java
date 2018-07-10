@@ -1,11 +1,18 @@
 package net.futureclient.asm.internal;
 
+import com.google.common.collect.Streams;
+import javafx.util.Pair;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.*;
+import org.objectweb.asm.tree.AnnotationNode;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -14,71 +21,6 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public final class TransformerUtil {
 
-    public static <T> Class<?> createCarrierClass(final String className, final T dataInstance, final Class<T> type, final Type realMethodDesc, final Method abstractMethod) {
-        if (!type.isInstance(dataInstance)) throw new IllegalArgumentException("Data is not an instance of the given type");
-
-        ClassWriter cw = new ClassWriter(0);
-        cw.visit(52, ACC_PUBLIC | ACC_SUPER, className, null, "java/lang/Object", null);
-
-        {   // basic constructor, nothing special but it's required
-            addConstructor(cw, className, Type.getInternalName(Object.class));
-        }
-
-        { // the reference to the function
-            FieldVisitor fv = cw.visitField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, "data", Type.getDescriptor(type), null, null);
-            fv.visitEnd();
-        }
-
-        {   // the static function we will use to invoke the lambda
-            final Type[] argTypes = Type.getArgumentTypes(abstractMethod);
-            final Type abstractRetType = Type.getReturnType(abstractMethod);
-            final Type realRetType = Type.getReturnType(realMethodDesc.getDescriptor());
-
-            MethodVisitor mv = cw.visitMethod(ACC_PUBLIC + ACC_STATIC, abstractMethod.getName(), realMethodDesc.getDescriptor(), null, null);
-            mv.visitCode();
-            Label l0 = new Label();
-            mv.visitLabel(l0);
-
-            mv.visitFieldInsn(GETSTATIC, className, "data", Type.getDescriptor(type));
-            // push arguments to stack
-            for (int i = 0; i < argTypes.length; i++) {
-                final Type t = argTypes[i];
-                mv.visitVarInsn(getVariableOpcode(t), i);
-            }
-            mv.visitMethodInsn(INVOKEINTERFACE, Type.getInternalName(type), abstractMethod.getName(), Type.getMethodDescriptor(abstractMethod), true);
-
-            Label l1 = new Label();
-            mv.visitLabel(l1);
-
-            // cast if we have the real type
-            if (!abstractRetType.equals(realRetType)) {
-                mv.visitTypeInsn(CHECKCAST, realRetType.getInternalName());
-            }
-            mv.visitInsn(getReturnOpcode(realRetType));
-
-            for (int i = 0; i < argTypes.length; i++) {
-                final Type t = argTypes[i];
-                mv.visitLocalVariable("arg" + i, t.getDescriptor(), null, l0, l1, i);
-            }
-
-            mv.visitMaxs(1 + argTypes.length, argTypes.length);
-            mv.visitEnd();
-        }
-
-        cw.visitEnd();
-
-        byte[] bytes = cw.toByteArray();
-        Class<?> clazz = createClass(bytes, className);
-
-        try {
-            Field f = clazz.getField("data");
-            makePublic(f);
-            f.set(null, dataInstance);
-            return clazz;
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
 
     public static int getReturnOpcode(Type returnType) {
         switch(returnType.getSort()) {
@@ -128,7 +70,7 @@ public final class TransformerUtil {
         }
     }
 
-    private static void makePublic(final Field f) {
+    public static void makePublic(final Field f) {
         try {
             f.setAccessible(true);
             Field modifiersField = Field.class.getDeclaredField("modifiers");
@@ -149,7 +91,7 @@ public final class TransformerUtil {
         }
     }
 
-    public static void addConstructor(ClassWriter cw, String className, String ownerClass) {
+    public static void addBasicConstructor(ClassWriter cw, String className, String ownerClass) {
         MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
         mv.visitCode();
         Label l0 = new Label();
@@ -164,6 +106,45 @@ public final class TransformerUtil {
         mv.visitLocalVariable("this", 'L' + className + ';', null, l0, l1, 0);
         mv.visitMaxs(1, 1);
         mv.visitEnd();
+    }
+
+    public static Stream<Pair<String, Object>> streamAnnotation(AnnotationNode annotation) {
+        return Streams.stream(new AnnotationIterator(annotation));
+    }
+
+    public static class AnnotationIterator implements Iterator<Pair<String, Object>> {
+        private final Iterator<Object> listIterator;
+
+        public AnnotationIterator(AnnotationNode source) {
+            if (source.values != null)
+                this.listIterator = source.values.iterator();
+            else
+                this.listIterator = Collections.emptyIterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return listIterator.hasNext();
+        }
+
+        @Override
+        public Pair<String, Object> next() {
+            return new Pair<>((String)listIterator.next(), listIterator.next());
+        }
+
+        // TODO: verify this
+        @Override
+        public void remove() {
+            listIterator.remove();
+            listIterator.next();
+            listIterator.remove();
+        }
+
+        public void forEachRemaining(BiConsumer<String, Object> consumer) {
+            while (listIterator.hasNext()) {
+                consumer.accept((String)listIterator.next(), listIterator.next());
+            }
+        }
     }
 
 }

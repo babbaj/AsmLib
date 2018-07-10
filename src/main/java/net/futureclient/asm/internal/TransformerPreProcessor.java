@@ -3,12 +3,10 @@ package net.futureclient.asm.internal;
 import com.google.common.collect.Streams;
 import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.config.Config;
-import net.futureclient.asm.obfuscation.RuntimeState;
 import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.annotation.Transformer;
 import net.futureclient.asm.transformer.util.AnnotationInfo;
 import net.minecraft.launchwrapper.IClassTransformer;
-import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Handle;
@@ -120,7 +118,7 @@ public final class TransformerPreProcessor implements IClassTransformer {
 
         // TODO: create delegate here
         final Class<? extends TransformerDelegate> wrapperClass =
-                TransformerDelegate.createDelegateClass(clazz.methods.toArray(new MethodNode[0]), Type.getObjectType(clazz.name));
+                TransformerDelegate.createDelegateClass(clazz, Type.getObjectType(clazz.name));
         TransformerDelegate.DELEGATES.put(clazz.name, wrapperClass);
     }
 
