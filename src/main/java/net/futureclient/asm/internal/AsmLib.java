@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import jdk.internal.org.objectweb.asm.Type;
+import org.objectweb.asm.Type;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.transformer.util.TransformerGenerator;
