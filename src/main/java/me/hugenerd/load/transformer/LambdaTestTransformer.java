@@ -15,8 +15,8 @@ import static org.objectweb.asm.Opcodes.*;
 @Transformer(Main.class)
 public class LambdaTestTransformer {
 
-    @Inject(name = "main", args = {String[].class}
-    , description = "Inject into main")
+    @Inject(name = "main", args = {String[].class},
+            description = "Inject into main")
     public void inject(AsmMethod method) {
         method.get(() -> System.out);
         method.get("👌👌👌👌👌👌👌👌"::toString);

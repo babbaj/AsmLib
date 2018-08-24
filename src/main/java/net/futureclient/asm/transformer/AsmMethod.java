@@ -4,7 +4,6 @@ import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.internal.CarrierClass;
 import net.futureclient.asm.internal.LambdaInfo;
-import net.futureclient.asm.internal.TransformerUtil;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 

@@ -6,7 +6,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import static org.objectweb.asm.Opcodes.*;
-import static net.futureclient.asm.internal.TransformerUtil.*;
+import static net.futureclient.asm.internal.AsmUtil.*;
 
 public final class CarrierClass {
     private CarrierClass() {}
@@ -31,7 +31,7 @@ public final class CarrierClass {
             final Type abstractRetType = Type.getReturnType(abstractMethod);
             final Type realRetType = Type.getReturnType(realMethodDesc.getDescriptor());
 
-            MethodVisitor mv = cw.visitMethod(ACC_PUBLIC + ACC_STATIC, abstractMethod.getName(), realMethodDesc.getDescriptor(), null, null);
+            MethodVisitor mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, abstractMethod.getName(), realMethodDesc.getDescriptor(), null, null);
             mv.visitCode();
             Label l0 = new Label();
             mv.visitLabel(l0);

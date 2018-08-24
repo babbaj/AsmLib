@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
-import net.futureclient.asm.internal.TransformerUtil.AnnotationIterator;
+import net.futureclient.asm.internal.AsmUtil.AnnotationIterator;
 
 import javax.annotation.Nullable;
 
-import static net.futureclient.asm.internal.TransformerUtil.*;
+import static net.futureclient.asm.internal.AsmUtil.*;
 import static org.objectweb.asm.Opcodes.*;
 
 public abstract class TransformerDelegate {
@@ -52,7 +52,7 @@ public abstract class TransformerDelegate {
         }
 
         {// implements setInstance(Object)
-            addSetter(cw, className, targetClassType, FIELD_NAME);
+            addSetter(cw, className, targetClassType);
         }
 
         {// add static methods
@@ -66,7 +66,7 @@ public abstract class TransformerDelegate {
         return createClass(bytes, className.replace("/", "."));
     }
 
-    private static void addSetter(ClassWriter cw, String className, Type targetClass, String FIELD_NAME) {
+    private static void addSetter(ClassWriter cw, String className, Type targetClass) {
         final MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, "setInstance", "(Ljava/lang/Object;)V", null, null);
         mv.visitCode();
         Label l0 = new Label();
@@ -123,7 +123,6 @@ public abstract class TransformerDelegate {
                     mv.visitLocalVariable("arg" + i, t.getDescriptor(), null, l0, l1, i);
                 }
 
-                //annotateMethod(mv, method);
                 copyAnnotations(method.visibleAnnotations, mv::visitAnnotation);
 
                 mv.visitEnd();
