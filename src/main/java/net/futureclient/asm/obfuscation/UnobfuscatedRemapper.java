@@ -29,4 +29,10 @@ public class UnobfuscatedRemapper implements IMapper {
     public String getFieldName(String parentClassName, String fieldName) {
         return fieldName;
     }
+
+    @Nullable
+    @Override
+    public String getMcpClassName(String obfClassName) {
+        return null;
+    }
 }

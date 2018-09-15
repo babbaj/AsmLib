@@ -2,6 +2,7 @@
   "name": "meme-mod",
   "required": true,
   "priority": 1000,
+  "mappings": "asmlib.future.mappings.json",
 
   "transformers": {
     "me.hugenerd.load.transformer": [

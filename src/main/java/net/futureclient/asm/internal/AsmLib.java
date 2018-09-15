@@ -63,6 +63,7 @@ public final class AsmLib {
 
     // TODO: maybe do this lazily
     // TODO: make this work without delegate classes
+    // TODO: manually load the classes so we don't rely on the launchwrapper
     private static void applyTransformerPatches(final Config config) {
         config.getTransformerClassNames().stream()
                 .map(AsmLib::loadClass)
