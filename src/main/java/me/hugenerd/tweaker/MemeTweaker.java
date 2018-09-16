@@ -16,7 +16,7 @@ public final class MemeTweaker implements ITweaker {
     @Override
     public void injectIntoClassLoader(LaunchClassLoader classLoader) {
         //AsmLib.addConfig(new MemeConfig());
-        AsmLibApi.addConfig("test_config.json");
+        AsmLibApi.registerConfig("test_config.json");
     }
 
     @Override

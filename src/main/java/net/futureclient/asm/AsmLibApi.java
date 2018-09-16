@@ -15,18 +15,18 @@ public final class AsmLibApi {
     private AsmLibApi() {};
 
     private static final Class<?> asmlib;
-    private static final Method mAddConfig_String;
-    private static final Method mAddConfig_Config;
+    private static final Method mRegisterConfig_String;
+    private static final Method mRegisterConfig_Config;
     private static final Method mInit;
 
     static {
         try {
             asmlib = getClass("net.futureclient.asm.internal.AsmLib");
-            mAddConfig_String = asmlib.getDeclaredMethod("addConfig", String.class);
-            mAddConfig_String.setAccessible(true);
+            mRegisterConfig_String = asmlib.getDeclaredMethod("registerConfig", String.class);
+            mRegisterConfig_String.setAccessible(true);
             Class<?> configClass = Class.forName(Config.class.getName(), false, Launch.classLoader);
-            mAddConfig_Config = asmlib.getDeclaredMethod("addConfig", configClass);
-            mAddConfig_Config.setAccessible(true);
+            mRegisterConfig_Config = asmlib.getDeclaredMethod("registerConfig", configClass);
+            mRegisterConfig_Config.setAccessible(true);
 
             mInit = asmlib.getDeclaredMethod("init");
             mInit.setAccessible(true);
@@ -52,9 +52,9 @@ public final class AsmLibApi {
         }
     }
 
-    public static void addConfig(String resourceFile) {
+    public static void registerConfig(String resourceFile) {
         try {
-            mAddConfig_String.invoke(null, resourceFile);
+            mRegisterConfig_String.invoke(null, resourceFile);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -65,7 +65,7 @@ public final class AsmLibApi {
         try {
             Class<?> clazz = getClass(configClassName);
             Object instance = clazz.newInstance();
-            mAddConfig_Config.invoke(null, instance);
+            mRegisterConfig_Config.invoke(null, instance);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }

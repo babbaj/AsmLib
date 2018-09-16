@@ -2,18 +2,19 @@ package net.futureclient.asm.obfuscation;
 
 public class RuntimeState {
 
-    private static IMapper remapper = UnobfuscatedRemapper.getInstance();
+    private static IMapper remapper = ObfuscatedRemapper.getInstance();
 
-    public static State getObfuscationState() {
-        return State.NOTCH;
+    // TODO: implement this
+    public static MappingType getObfuscationState() {
+        return MappingType.getCompiledMappingType();
     }
 
     public static IMapper getMapper() {
         return remapper;
     }
 
-    // for now just use forgehax remapping
-    // TODO: implement remapping ourself
+
+    @Deprecated
     public static void setRemapper(IMapper mapper) {
         remapper = mapper;
     }

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.futureclient.asm.obfuscation.ObfuscatedRemapper;
 import org.objectweb.asm.Type;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.config.ConfigManager;
@@ -13,6 +14,7 @@ import net.minecraft.launchwrapper.Launch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Objects;
@@ -36,16 +38,34 @@ public final class AsmLib {
         }
     }
 
-    public static void addConfig(final String configResource) {
-        final InputStream is = AsmLib.class.getClassLoader().getResourceAsStream(configResource);
-        Objects.requireNonNull(is, "Failed to find config file: " + configResource);
-        final JsonObject root = new JsonParser().parse(new InputStreamReader(is)).getAsJsonObject();
-
+    public static void registerConfig(final String configResource) {
+        JsonObject root;
+        try (final InputStream is = AsmLib.class.getClassLoader().getResourceAsStream(configResource)) {
+            Objects.requireNonNull(is, "Failed to find config file: " + configResource);
+            root = new JsonParser().parse(new InputStreamReader(is)).getAsJsonObject();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
         final Config config = Config.fromJson(root);
-        addConfig(config);
+
+        final String mappingsResource = root.get("mappings").getAsString();
+        if (mappingsResource == null)
+            throw new IllegalStateException("Config is missing mappings file");
+
+        try (final InputStream is = AsmLib.class.getClassLoader().getResourceAsStream(mappingsResource)) {
+            Objects.requireNonNull(is, "Failed to find resource file: " + configResource);
+            JsonObject mappingsRoot = new JsonParser().parse(new InputStreamReader(is)).getAsJsonObject();
+            ObfuscatedRemapper.getInstance().addMappings(mappingsRoot);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
+
+
+        registerConfig(config);
     }
 
-    public static void addConfig(final Config config) {
+    private static void registerConfig(final Config config) {
         ConfigManager.INSTANCE.addConfiguration(config);
         applyTransformerPatches(config); // TODO: do this lazily
     }
