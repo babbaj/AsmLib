@@ -1,12 +1,33 @@
 package net.futureclient.asm.obfuscation;
 
+import net.futureclient.asm.internal.AsmLib;
+
 public class RuntimeState {
 
     private static IMapper remapper = ObfuscatedRemapper.getInstance();
 
-    // TODO: implement this
-    public static MappingType getObfuscationState() {
-        return MappingType.getCompiledMappingType();
+    private static MappingType runtimeMappingType;
+
+    public static MappingType getRuntimeMappingType() {
+        return runtimeMappingType;
+    }
+
+    public static void setRuntimeMappingType(MappingType type) {
+        switch (type) {
+            case MCP:
+                setRemapper(UnobfuscatedRemapper.getInstance());
+                break;
+            case SEARGE:
+                throw new UnsupportedOperationException("searge");
+            case NOTCH:
+                setRemapper(ObfuscatedRemapper.getInstance());
+                break;
+            case CUSTOM:
+                throw new UnsupportedOperationException("custom");
+            default:
+                throw new IllegalArgumentException();
+        }
+        runtimeMappingType = type;
     }
 
     public static IMapper getMapper() {
@@ -14,8 +35,7 @@ public class RuntimeState {
     }
 
 
-    @Deprecated
-    public static void setRemapper(IMapper mapper) {
+    private static void setRemapper(IMapper mapper) {
         remapper = mapper;
     }
 }

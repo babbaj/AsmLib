@@ -50,7 +50,6 @@ public class ObfuscatedRemapper implements IMapper {
     }
 
 
-
     @Nullable
     @Override
     public String getClassName(String className) {

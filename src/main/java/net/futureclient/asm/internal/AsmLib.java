@@ -4,7 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.futureclient.asm.obfuscation.MappingType;
 import net.futureclient.asm.obfuscation.ObfuscatedRemapper;
+import net.futureclient.asm.obfuscation.RuntimeState;
 import org.objectweb.asm.Type;
 import net.futureclient.asm.config.Config;
 import net.futureclient.asm.config.ConfigManager;
@@ -18,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * This class and all other AsmLib classes should be loaded by the LaunchClassLoader except for
@@ -52,14 +55,27 @@ public final class AsmLib {
         if (mappingsResource == null)
             throw new IllegalStateException("Config is missing mappings file");
 
+        // TODO: move this stuff to init
+        final Optional<MappingType> compiledMappingType = MappingType.getCompiledMappingType();
+        if (!compiledMappingType.isPresent()) {
+            LOGGER.info("Failed to get mapping type from resources, assuming dev environment");
+            RuntimeState.setRuntimeMappingType(MappingType.MCP);
+        } else {
+            RuntimeState.setRuntimeMappingType(compiledMappingType.get());
+        }
+
         try (final InputStream is = AsmLib.class.getClassLoader().getResourceAsStream(mappingsResource)) {
-            Objects.requireNonNull(is, "Failed to find resource file: " + configResource);
-            JsonObject mappingsRoot = new JsonParser().parse(new InputStreamReader(is)).getAsJsonObject();
-            ObfuscatedRemapper.getInstance().addMappings(mappingsRoot);
+            //Objects.requireNonNull(is, "Failed to find resource file: " + mappingsResource);
+            if (is != null) {
+                JsonObject mappingsRoot = new JsonParser().parse(new InputStreamReader(is)).getAsJsonObject();
+                ObfuscatedRemapper.getInstance().addMappings(mappingsRoot);
+            } else if (compiledMappingType.isPresent()) {
+                // got the mapping type but failed to find mappings file
+                throw new IllegalStateException("Failed to find mapping file \"" + mappingsResource + "\"");
+            }
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
-
 
 
         registerConfig(config);
