@@ -35,6 +35,8 @@ public final class AsmLib {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static boolean initialized;
 
+    private static boolean isDevEnvironment;
+
     static {
         if (AsmLib.class.getClassLoader() != Launch.classLoader) {
             throw new IllegalStateException("AsmLib must be loaded by the LaunchClassLoader");
@@ -42,6 +44,8 @@ public final class AsmLib {
     }
 
     public static void registerConfig(final String configResource) {
+        assertInitialized();
+
         JsonObject root;
         try (final InputStream is = AsmLib.class.getClassLoader().getResourceAsStream(configResource)) {
             Objects.requireNonNull(is, "Failed to find config file: " + configResource);
@@ -55,21 +59,12 @@ public final class AsmLib {
         if (mappingsResource == null)
             throw new IllegalStateException("Config is missing mappings file");
 
-        // TODO: move this stuff to init
-        final Optional<MappingType> compiledMappingType = MappingType.getCompiledMappingType();
-        if (!compiledMappingType.isPresent()) {
-            LOGGER.info("Failed to get mapping type from resources, assuming dev environment");
-            RuntimeState.setRuntimeMappingType(MappingType.MCP);
-        } else {
-            RuntimeState.setRuntimeMappingType(compiledMappingType.get());
-        }
 
         try (final InputStream is = AsmLib.class.getClassLoader().getResourceAsStream(mappingsResource)) {
-            //Objects.requireNonNull(is, "Failed to find resource file: " + mappingsResource);
             if (is != null) {
                 JsonObject mappingsRoot = new JsonParser().parse(new InputStreamReader(is)).getAsJsonObject();
                 ObfuscatedRemapper.getInstance().addMappings(mappingsRoot);
-            } else if (compiledMappingType.isPresent()) {
+            } else if (!isDevEnvironment) {
                 // got the mapping type but failed to find mappings file
                 throw new IllegalStateException("Failed to find mapping file \"" + mappingsResource + "\"");
             }
@@ -77,13 +72,29 @@ public final class AsmLib {
             throw new RuntimeException(ex);
         }
 
-
         registerConfig(config);
     }
 
     private static void registerConfig(final Config config) {
         ConfigManager.INSTANCE.addConfiguration(config);
-        applyTransformerPatches(config); // TODO: do this lazily
+        applyTransformerPatches(config);
+    }
+
+    private static void getAndSetMappingType() {
+        final Optional<MappingType> compiledMappingType = MappingType.getCompiledMappingType();
+        if (!compiledMappingType.isPresent()) {
+            LOGGER.info("Failed to get mapping type from resources, assuming dev environment");
+            RuntimeState.setRuntimeMappingType(MappingType.MCP);
+            isDevEnvironment = true;
+        } else {
+            RuntimeState.setRuntimeMappingType(compiledMappingType.get());
+            isDevEnvironment = false;
+        }
+    }
+
+    private static void assertInitialized() {
+        if (!initialized)
+            throw new IllegalStateException("AsmLib has not been initialized");
     }
 
     public static void init() {
@@ -93,6 +104,8 @@ public final class AsmLib {
 
             Launch.classLoader.registerTransformer(TransformerPreProcessor.class.getName());
             Launch.classLoader.registerTransformer(LaunchWrapperTransformer.class.getName());
+
+            getAndSetMappingType();
         }
         initialized = true;
     }
