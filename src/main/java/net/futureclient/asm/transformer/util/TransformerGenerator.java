@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -52,8 +53,8 @@ public final class TransformerGenerator {
 
         Transformer info = delegateInstance.getClass().getAnnotation(Transformer.class);
         try {
-
-            String targetClass = info.target();
+            final String targetClass = info.target();
+            Objects.requireNonNull(targetClass);
             ClassTransformer transformer = new ClassTransformer(targetClass, info.required(), info.remap()) {};
 
             Stream.of(delegateInstance.getClass().getDeclaredMethods())
