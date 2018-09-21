@@ -133,7 +133,7 @@ public class AsmMethod {
     }
 
     public void visitLabel(LabelNode label) {
-        this.method.instructions.insertBefore(cursor, new LabelNode());
+        this.visitInsn(label);
     }
 
     public void run(Runnable r) {
