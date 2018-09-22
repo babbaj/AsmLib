@@ -87,7 +87,8 @@ public final class AsmLib {
             RuntimeState.setRuntimeMappingType(MappingType.MCP);
             isDevEnvironment = true;
         } else {
-            RuntimeState.setRuntimeMappingType(compiledMappingType.get());
+            //RuntimeState.setRuntimeMappingType(compiledMappingType.get());
+            RuntimeState.setRuntimeMappingType(MappingType.NOTCH);
             isDevEnvironment = false;
         }
     }
