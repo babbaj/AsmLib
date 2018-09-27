@@ -127,6 +127,7 @@ public final class AsmLib {
     private static TransformerDelegate createDelegate(Class<?> source) {
         try {
             final Class<? extends TransformerDelegate> delegateClass = TransformerDelegate.DELEGATES.get(Type.getInternalName(source));
+            Objects.requireNonNull(delegateClass, "Failed to get " + source.getName() + " from delegates (" + source.getClassLoader() + " )");
             final TransformerDelegate instance = delegateClass.newInstance();
             instance.setInstance(source.newInstance());
             return instance;
@@ -138,7 +139,7 @@ public final class AsmLib {
 
     private static Class<?> loadClass(String name) {
         try {
-            return Class.forName(name, true, Launch.classLoader);
+            return Class.forName(name, false, Launch.classLoader);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

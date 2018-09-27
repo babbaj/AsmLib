@@ -4,13 +4,12 @@ import com.google.common.collect.Streams;
 import javafx.util.Pair;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.*;
-import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -21,6 +20,7 @@ import static org.objectweb.asm.Opcodes.*;
  */
 public final class AsmUtil {
 
+    public static final Type OBJECT_TYPE = Type.getType("Ljava/lang/Object;");
 
     public static int getReturnOpcode(Type returnType) {
         switch(returnType.getSort()) {
@@ -67,6 +67,21 @@ public final class AsmUtil {
                 throw new IllegalArgumentException("Illegal variable type VOID");
             default:
                 throw new IllegalArgumentException("Unknown Type Sort: " + type.getSort());
+        }
+    }
+
+    public static int opcodeFromTag(int tag) {
+        switch (tag) {
+            case H_INVOKESTATIC:
+                return INVOKESTATIC;
+            case H_INVOKEVIRTUAL:
+                return INVOKEVIRTUAL;
+            case H_INVOKEINTERFACE:
+                return INVOKEINTERFACE;
+            case H_INVOKESPECIAL:
+                return INVOKESPECIAL;
+            default:
+                throw new IllegalArgumentException("Invalid handle kind: " + Integer.toHexString(tag));
         }
     }
 
@@ -145,6 +160,88 @@ public final class AsmUtil {
                 consumer.accept((String)listIterator.next(), listIterator.next());
             }
         }
+    }
+
+    // virtual methods will be converted to static methods that accept the instance as the first argument
+    // TODO: clean this up
+    // TODO: accept Handle
+    public static MethodNode createWrapperFunction(final String newName, final String targetClass, final String name, final String descriptor, final int handleTag) {
+        switch (handleTag) {
+            case H_INVOKEVIRTUAL:   break;
+            case H_INVOKEINTERFACE: break;
+            case H_INVOKESPECIAL:   break;
+            case H_INVOKESTATIC:    break;
+            default: throw new IllegalArgumentException("Invalid handle tag: " + handleTag);
+        }
+        // if the method is virtual the new method will have an extra argument to accept the instance
+        List<Type> argumentTypes  = new ArrayList<>(Arrays.asList(Type.getArgumentTypes(descriptor)));// + (handleTag  == H_INVOKESTATIC ? 1 : 0);
+        if (handleTag  != H_INVOKESTATIC) {
+            argumentTypes.add(0, Type.getObjectType(targetClass));
+        }
+        final Type[] variableTypes = argumentTypes.stream()
+                .map(type -> isObjectType(type) ? getRawType(type) : type)
+                .toArray(Type[]::new);
+
+        final StringBuilder descBuilder = new StringBuilder();
+        descBuilder.append('(');
+        for (Type t : variableTypes) descBuilder.append(t.getDescriptor());
+        descBuilder.append(')');
+        descBuilder.append(getRawType(Type.getReturnType(descriptor)).getDescriptor());
+
+        final MethodNode wrapperMethod = new MethodNode(ACC_PUBLIC | ACC_STATIC, newName, descBuilder.toString(), null, null);
+        final LabelNode start = new LabelNode();
+        final LabelNode end = new LabelNode();
+        final InsnList insnList = new InsnList();
+        insnList.add(start);
+        for (int i = 0; i < variableTypes.length; i++) {
+            final int varOpcode = getVariableOpcode(variableTypes[i]);
+            insnList.add(new VarInsnNode(varOpcode, i));
+            if (isObjectType(variableTypes[i]))
+                insnList.add(new TypeInsnNode(CHECKCAST, argumentTypes.get(i).getInternalName()));
+        }
+
+        insnList.add(new MethodInsnNode(opcodeFromTag(handleTag), targetClass, name, descriptor, handleTag == H_INVOKEINTERFACE));
+        insnList.add(new InsnNode(getReturnOpcode(Type.getReturnType(descriptor))));
+        insnList.add(end);
+
+        wrapperMethod.instructions = insnList;
+
+        for (int i = 0; i < variableTypes.length; i++) {
+            final Type t = variableTypes[i];
+            wrapperMethod.visitLocalVariable("arg" + i, t.getDescriptor(), null, start.getLabel(), end.getLabel(), i);
+        }
+
+        return wrapperMethod;
+    }
+
+    private static boolean isObjectType(Type t) {
+        return t.getSort() == Type.OBJECT || t.getSort() == Type.ARRAY;
+    }
+
+    public static Type toRawTypeDescriptor(Type desc) {
+        final Type ret = getRawType(desc.getReturnType());
+        final Type[] args = Stream.of(desc.getArgumentTypes())
+                .map(AsmUtil::getRawType)
+                .toArray(Type[]::new);
+        return Type.getMethodType(ret, args);
+    }
+
+    // similar to toRawTypeDescriptor but does not change return type
+    // TODO: avoid code duplication
+    public static Type descriptorWithRawTypeArgs(Type desc) {
+        final Type[] args = Stream.of(desc.getArgumentTypes())
+                .map(AsmUtil::getRawType)
+                .toArray(Type[]::new);
+        return Type.getMethodType(desc.getReturnType(), args);
+    }
+
+    // if the type is an array or object it is reduced to Object, else it is a primitive type
+    private static Type getRawType(final Type t) {
+        if (t.getSort() == Type.METHOD) throw new IllegalArgumentException("method is not a valid type");
+        if (t.getSort() == Type.OBJECT || t.getSort() == Type.ARRAY) {
+            return OBJECT_TYPE;
+        }
+        return t;
     }
 
 }
