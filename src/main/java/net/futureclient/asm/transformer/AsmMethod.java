@@ -1,7 +1,9 @@
 package net.futureclient.asm.transformer;
 
+import com.google.common.collect.Streams;
 import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.config.Config;
+import net.futureclient.asm.internal.AsmUtil;
 import net.futureclient.asm.internal.CarrierClass;
 import net.futureclient.asm.internal.LambdaInfo;
 import org.objectweb.asm.Type;
@@ -52,8 +54,7 @@ public class AsmMethod {
             case H_INVOKEINTERFACE:
                 return INVOKEINTERFACE;
             case H_INVOKESPECIAL:
-            case H_NEWINVOKESPECIAL:
-                return INVOKESPECIAL; // not sure about this
+                return INVOKESPECIAL;
             default:
                 throw new IllegalArgumentException("Invalid handle kind: " + Integer.toHexString(tag));
         }
@@ -97,6 +98,7 @@ public class AsmMethod {
     }
 
     public <T> void invoke(T instance) {
+        Objects.requireNonNull(instance);
         final LambdaInfo func = LambdaInfo.lambdas.get(instance);
         if (func != null && Type.getArgumentTypes(func.lambdaDesc).length == 0) {
             final int opcode = opcodeFromTag(func.targetMethod.getTag());
@@ -125,6 +127,9 @@ public class AsmMethod {
     }
 
     public void setCursor(AbstractInsnNode location) {
+        Objects.requireNonNull(location);
+        if (!this.method.instructions.contains(location))
+            throw new IllegalArgumentException("Location must be in the method's instruction list");
         this.cursor = location;
     }
 
@@ -134,6 +139,19 @@ public class AsmMethod {
 
     public void visitLabel(LabelNode label) {
         this.visitInsn(label);
+    }
+
+    // adds a conditional return based the boolean value on the stack
+    // if the method is not a void method then a return value is expected to either be returned or popped
+    public void returnIf(boolean b) {
+        final LabelNode jump = new LabelNode();
+        final int returnOpcode = AsmUtil.getReturnOpcode(Type.getReturnType(this.method.desc));
+        visitInsn(new JumpInsnNode(b ? IFEQ : IFNE, jump));
+        visitInsn(new InsnNode(returnOpcode));
+        visitInsn(jump);
+        if (returnOpcode != RETURN) {
+            visitInsn(new InsnNode(POP));
+        }
     }
 
     public void run(Runnable r) {
@@ -158,6 +176,12 @@ public class AsmMethod {
     // function that takes an object and returns an object
     public <T, R> void apply(Function<T, R> function) {
         invoke(function);
+    }
+
+    public Stream<AbstractInsnNode> stream() {
+        final InsnList insnList = this.method.instructions;
+        if (insnList == null) return Stream.empty();
+        return Streams.stream(insnList.iterator());
     }
 
 }

@@ -25,7 +25,7 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-         List<ClassTransformer> classTransformers = this.getTransformers(name, transformedName);
+        List<ClassTransformer> classTransformers = this.getTransformers(name, transformedName);
 
         if (!classTransformers.isEmpty()) {
             ClassNode cn = new ClassNode();
