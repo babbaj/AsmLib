@@ -131,15 +131,20 @@ public final class AsmLib {
             final TransformerDelegate instance = delegateClass.newInstance();
             instance.setInstance(source.newInstance());
             return instance;
-        } catch (ReflectiveOperationException e) {
+        /*} catch (ReflectiveOperationException e) {
             e.printStackTrace();
+        }*/
+        } catch (Throwable ex) {
+            System.err.println("Error thrown from creating transformer: " + source.getName());
+            ex.printStackTrace();
+            throw new RuntimeException(ex);
         }
-        return null;
+        //return null;
     }
 
     private static Class<?> loadClass(String name) {
         try {
-            return Class.forName(name, false, Launch.classLoader);
+            return Class.forName(name, true, Launch.classLoader);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

@@ -154,6 +154,12 @@ public class AsmMethod {
         }
     }
 
+    public void jumpIf(int opcode, AbstractInsnNode jumpTo) {
+        final LabelNode label = new LabelNode();
+        this.visitInsn(new JumpInsnNode(opcode, label));
+        this.method.instructions.insertBefore(jumpTo, label);
+    }
+
     public void run(Runnable r) {
         invoke(r);
     }
