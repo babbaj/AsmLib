@@ -48,7 +48,6 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
 
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
             cn.accept(cw);
-            //log("MainOutput.class", cw.toByteArray());
             return cw.toByteArray();
         }
 

@@ -145,8 +145,9 @@ public final class AsmLib {
     private static Class<?> loadClass(String name) {
         try {
             return Class.forName(name, true, Launch.classLoader);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable t) {
+            System.err.println("Exception thrown from loading class: " + name);
+            t.printStackTrace();
             return null;
         }
     }

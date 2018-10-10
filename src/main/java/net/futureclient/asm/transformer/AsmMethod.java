@@ -97,6 +97,10 @@ public class AsmMethod {
             throw new IllegalArgumentException("Object implements multiple or non functional interfaces");
     }
 
+    private int getReturnOpcode() {
+        return AsmUtil.getReturnOpcode(Type.getReturnType(this.method.desc));
+    }
+
     public <T> void invoke(T instance) {
         Objects.requireNonNull(instance);
         final LambdaInfo func = LambdaInfo.lambdas.get(instance);
@@ -145,7 +149,7 @@ public class AsmMethod {
     // if the method is not a void method then a return value is expected to either be returned or popped
     public void returnIf(boolean b) {
         final LabelNode jump = new LabelNode();
-        final int returnOpcode = AsmUtil.getReturnOpcode(Type.getReturnType(this.method.desc));
+        final int returnOpcode = this.getReturnOpcode();
         visitInsn(new JumpInsnNode(b ? IFEQ : IFNE, jump));
         visitInsn(new InsnNode(returnOpcode));
         visitInsn(jump);
@@ -158,6 +162,21 @@ public class AsmMethod {
         final LabelNode label = new LabelNode();
         this.visitInsn(new JumpInsnNode(opcode, label));
         this.method.instructions.insertBefore(jumpTo, label);
+    }
+
+    public void forEachReturn(Consumer<AbstractInsnNode> func) {
+        final int returnOpcode = getReturnOpcode();
+        this.stream()
+            .filter(node -> node.getOpcode() == returnOpcode)
+            .forEach(func);
+    }
+
+    public AbstractInsnNode getLastReturn() {
+        final int returnOpcode = this.getReturnOpcode();
+        return this.stream()
+            .filter(node -> node.getOpcode() == returnOpcode)
+            .reduce((a, b) -> b)
+            .orElseThrow(() -> new IllegalStateException("No return node"));
     }
 
     public void run(Runnable r) {

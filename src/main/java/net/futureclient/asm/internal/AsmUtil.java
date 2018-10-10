@@ -193,11 +193,17 @@ public final class AsmUtil {
         final LabelNode end = new LabelNode();
         final InsnList insnList = new InsnList();
         insnList.add(start);
+        // TODO: refactor
+        int lvtIndex = 0;
         for (int i = 0; i < variableTypes.length; i++) {
             final int varOpcode = getVariableOpcode(variableTypes[i]);
-            insnList.add(new VarInsnNode(varOpcode, i));
+            insnList.add(new VarInsnNode(varOpcode, lvtIndex));
             if (isObjectType(variableTypes[i]))
                 insnList.add(new TypeInsnNode(CHECKCAST, argumentTypes.get(i).getInternalName()));
+            if (varOpcode == DLOAD || varOpcode == LLOAD)
+                lvtIndex += 2; // longs and doubles take 2 positions in lvt
+            else
+                lvtIndex += 1;
         }
 
         insnList.add(new MethodInsnNode(opcodeFromTag(handleTag), targetClass, name, descriptor, handleTag == H_INVOKEINTERFACE));
@@ -206,9 +212,14 @@ public final class AsmUtil {
 
         wrapperMethod.instructions = insnList;
 
+        lvtIndex = 0;
         for (int i = 0; i < variableTypes.length; i++) {
             final Type t = variableTypes[i];
-            wrapperMethod.visitLocalVariable("arg" + i, t.getDescriptor(), null, start.getLabel(), end.getLabel(), i);
+            wrapperMethod.visitLocalVariable("arg" + i, t.getDescriptor(), null, start.getLabel(), end.getLabel(), lvtIndex);
+            if (t.getSort() == Type.DOUBLE || t.getSort() == Type.LONG)
+                lvtIndex += 2;
+            else
+                lvtIndex += 1;
         }
 
         return wrapperMethod;

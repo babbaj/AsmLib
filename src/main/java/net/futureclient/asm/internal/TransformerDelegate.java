@@ -1,5 +1,6 @@
 package net.futureclient.asm.internal;
 
+import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.wrapper.LaunchWrapperTransformer;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -92,7 +93,10 @@ public abstract class TransformerDelegate {
             .filter(m -> !m.name.equals("<init>"))
             .filter(m -> !m.name.equals("<clinit>"))
             .filter(m -> (m.access & ACC_SYNTHETIC) == 0)
-            // TODO: maybe filter by annotated methods
+            .filter(m -> m.visibleAnnotations != null &&
+                    m.visibleAnnotations.stream()
+                    .anyMatch(node -> node.desc.equals(Type.getDescriptor(Inject.class)))
+            )
             .forEach(method -> {
                 final Type sourceDesc = Type.getMethodType(method.desc);
                 final Type[] argTypes = sourceDesc.getArgumentTypes();
