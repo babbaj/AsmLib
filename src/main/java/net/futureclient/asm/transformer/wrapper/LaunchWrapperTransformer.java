@@ -38,7 +38,6 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
                     LOGGER.info("Successfully transformed class {}", transformer.getTargetClassName()); // TODO; success message for each method
                 } catch (Exception e) {
                     LOGGER.log(Level.ERROR, "Error transforming \"{}\" with transformer \"{}\".", transformedName, transformer.getClass().getName());
-
                     if (transformer.isRequired())
                         throw new Error(e); // crash game
                     else
@@ -47,7 +46,12 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
             });
 
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-            cn.accept(cw);
+            try {
+              cn.accept(cw);
+            } catch (Throwable t) {
+              System.err.println("Exception thrown from ASM while assembling class \"" + transformedName + "\"");
+              throw t;
+            }
             return cw.toByteArray();
         }
 
@@ -70,10 +74,10 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
                 .sorted(Config::compareTo)
                 .map(Config::getClassTransformers)
                 .flatMap(List::stream)
-                .filter(classTransformer ->
-                        classTransformer.getTargetClassName().equals(name) ||
-                        classTransformer.getTargetClassName().equals(transformedName)
-                )
+                .filter(classTransformer -> {
+                    final String runtimeName = classTransformer.getRuntimeTargetClassName();
+                    return runtimeName.equals(name) || runtimeName.equals(transformedName);
+                })
                 .collect(Collectors.toList());
     }
 

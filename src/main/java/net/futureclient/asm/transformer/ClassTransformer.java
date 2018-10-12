@@ -75,6 +75,10 @@ public abstract class ClassTransformer {
         return this.methodTransformers;
     }
 
+    public String getRuntimeTargetClassName() {
+        return ObfUtils.remapClass(getTargetClassName()); // TODO: cache
+    }
+
     public String getTargetClassName() {
         return this.targetClassName;
     }

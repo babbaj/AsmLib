@@ -1,5 +1,6 @@
 package net.futureclient.asm.transformer.util;
 
+import java.util.function.UnaryOperator;
 import net.futureclient.asm.obfuscation.RuntimeState;
 import org.objectweb.asm.Type;
 
@@ -13,7 +14,7 @@ public final class ObfUtils {
     public static String remapMethodName(String parentClassName, String methodName, String methodDescriptor) {
         return Optional.ofNullable(RuntimeState.getMapper().getMethodName(parentClassName, methodName, methodDescriptor))
                 .orElseGet(() -> {
-                    System.err.println("Failed to find obfuscation mapping for method: " + methodName + methodDescriptor);
+                    System.err.println("Failed to find obfuscation mapping for method: " + parentClassName+ "::" + methodName + methodDescriptor);
                     return methodName;
                 });
     }
@@ -32,13 +33,20 @@ public final class ObfUtils {
 
     // if the remapper returns null then use the same name
     public static String remapClass(String className) {
+        return remapClass(className, RuntimeState.getMapper()::getClassName, "obf");
+    }
+
+    public static String remapClassToMcp(String className) {
+        return remapClass(className, RuntimeState.getMapper()::getMcpClassName, "mcp");
+    }
+
+    private static String remapClass(String className, UnaryOperator<String> remapper, String type) {
         if (className.length() == 1) return className;
-        return Optional.ofNullable(RuntimeState.getMapper().getClassName(className.replace(".", "/")))
-                //.map(str -> str.replace("/", "."))
-                .orElseGet(() -> {
-                    System.err.println("Failed to find obfuscation mapping for: " + className);
-                    return className;
-                });
+        return Optional.ofNullable(remapper.apply(className.replace(".", "/")))
+            .orElseGet(() -> {
+                System.err.println("Failed to find " + type + " mapping for: " + className);
+                return className;
+            });
     }
 
     // may be an array

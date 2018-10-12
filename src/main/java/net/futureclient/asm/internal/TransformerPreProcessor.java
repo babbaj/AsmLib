@@ -3,9 +3,12 @@ package net.futureclient.asm.internal;
 import com.google.common.collect.Streams;
 import net.futureclient.asm.config.ConfigManager;
 import net.futureclient.asm.config.Config;
+import net.futureclient.asm.obfuscation.MappingType;
+import net.futureclient.asm.obfuscation.RuntimeState;
 import net.futureclient.asm.transformer.annotation.Inject;
 import net.futureclient.asm.transformer.annotation.Transformer;
 import net.futureclient.asm.transformer.util.AnnotationInfo;
+import net.futureclient.asm.transformer.util.ObfUtils;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -100,7 +103,8 @@ public final class TransformerPreProcessor implements IClassTransformer {
         if (info.getValue("target") == null) {
             node.values.add(0, "target");
             String newTarget = Optional.of(info.<Type>getValue("value"))
-                    .map(Type::getClassName)
+                    .map(Type::getInternalName)
+                    .map(this::mcpClassName)
                     .get();
             node.values.add(1, newTarget);
         }
@@ -118,9 +122,13 @@ public final class TransformerPreProcessor implements IClassTransformer {
             final String name = info.getValue("name");
             if (name == null)
                 throw new IllegalArgumentException("Failed to supply method name");
-            final String ret = Optional.ofNullable(info.<Type>getValue("ret")).orElse(Type.VOID_TYPE).getDescriptor();
+            final String ret = Optional.ofNullable(info.<Type>getValue("ret"))
+                .map(this::mcpClassType)
+                .orElse(Type.VOID_TYPE)
+                .getDescriptor();
             final String args = Optional.ofNullable(info.<List<Type>>getValue("args"))
                     .map(list -> list.stream()
+                            .map(this::mcpClassType)
                             .map(Type::getDescriptor)
                             .collect(Collectors.joining()))
                     .orElse("");
@@ -199,5 +207,23 @@ public final class TransformerPreProcessor implements IClassTransformer {
                 "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;)V"));
 
         method.instructions.insert(node, list);
+    }
+
+    // if we we are compiled to notch we need to remap class literals back to mcp
+    private String mcpClassName(String clazz) {
+        if (RuntimeState.getRuntimeMappingType() == MappingType.NOTCH) {
+            return ObfUtils.remapClassToMcp(clazz); // notch -> mcp
+        }
+        // already mcp
+        return clazz;
+    }
+
+    private Type mcpClassType(Type t) { // TODO: fix
+        if (RuntimeState.getRuntimeMappingType() == MappingType.NOTCH) {
+            if (t.getSort() != Type.OBJECT && t.getSort() != Type.ARRAY) return t; // primitive
+            final String clazz = t.getInternalName();
+            return Type.getObjectType(ObfUtils.remapClassToMcp(clazz)); // notch -> mcp
+        }
+        return t;
     }
 }

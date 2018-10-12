@@ -1,7 +1,5 @@
 package net.futureclient.asm.obfuscation;
 
-import net.futureclient.asm.internal.AsmLib;
-
 public class RuntimeState {
 
     private static IMapper remapper = ObfuscatedRemapper.getInstance();
