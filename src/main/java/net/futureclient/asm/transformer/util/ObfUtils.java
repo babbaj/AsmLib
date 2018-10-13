@@ -1,6 +1,7 @@
 package net.futureclient.asm.transformer.util;
 
 import java.util.function.UnaryOperator;
+import javax.annotation.Nonnull;
 import net.futureclient.asm.obfuscation.RuntimeState;
 import org.objectweb.asm.Type;
 
@@ -32,11 +33,11 @@ public final class ObfUtils {
     }
 
     // if the remapper returns null then use the same name
-    public static String remapClass(String className) {
+    public static @Nonnull String remapClass(String className) {
         return remapClass(className, RuntimeState.getMapper()::getClassName, "obf");
     }
 
-    public static String remapClassToMcp(String className) {
+    public static @Nonnull String remapClassToMcp(String className) {
         return remapClass(className, RuntimeState.getMapper()::getMcpClassName, "mcp");
     }
 

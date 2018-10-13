@@ -1,5 +1,6 @@
 package net.futureclient.asm.transformer;
 
+import javax.annotation.Nullable;
 import net.futureclient.asm.internal.AsmLib;
 import net.futureclient.asm.transformer.util.ObfUtils;
 import org.objectweb.asm.tree.ClassNode;
@@ -12,11 +13,17 @@ public abstract class ClassTransformer {
     private final List<MethodTransformer> methodTransformers = new ArrayList<>();
 
     private final String targetClassName;
+
+    private boolean remappedTargetName = false;
+    private String runtimeTargetClassName;
+
     private final boolean remap;
     private final boolean required;
 
     public ClassTransformer(final String className, final boolean required, final boolean remap) {
+        Objects.requireNonNull(className);
         this.targetClassName = className;
+        this.runtimeTargetClassName = targetClassName;
         this.remap = remap;
         this.required = required;
     }
@@ -75,8 +82,18 @@ public abstract class ClassTransformer {
         return this.methodTransformers;
     }
 
+
     public String getRuntimeTargetClassName() {
-        return ObfUtils.remapClass(getTargetClassName()); // TODO: cache
+        if (remap) {
+            // remap lazily and cache result
+            if (!remappedTargetName) {
+                runtimeTargetClassName = ObfUtils.remapClass(getTargetClassName());
+                remappedTargetName = true;
+            }
+            return runtimeTargetClassName != null ? runtimeTargetClassName : getTargetClassName();
+        } else {
+            return getTargetClassName();
+        }
     }
 
     public String getTargetClassName() {

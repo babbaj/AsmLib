@@ -35,7 +35,7 @@ public final class LaunchWrapperTransformer implements IClassTransformer {
             classTransformers.forEach(transformer -> {
                 try {
                     transformer.transform(cn);
-                    LOGGER.info("Successfully transformed class {}", transformer.getTargetClassName()); // TODO; success message for each method
+                    LOGGER.info("Successfully transformed class {}", transformer.getTargetClassName());
                 } catch (Exception e) {
                     LOGGER.log(Level.ERROR, "Error transforming \"{}\" with transformer \"{}\".", transformedName, transformer.getClass().getName());
                     if (transformer.isRequired())
